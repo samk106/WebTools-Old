@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TimeBlock Todo – Weekly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+  <style>
+    html, body { height: 100%; }
+    .dragging { opacity: .85; transform: rotate(1deg); box-shadow: 0 10px 20px rgba(0,0,0,.15); border: 2px dashed #60a5fa !important; }
+    .drop-highlight { background: #f8fafc; outline: 2px dashed #60a5fa; outline-offset: -6px; }
+    .task-card { user-select: none; -webkit-user-select:none; }
+    .row-dragging { background: #f3f4f6; opacity: .95; box-shadow: 0 10px 20px rgba(0,0,0,.1); }
+    .drag-handle { cursor: grab; }
+    .drag-handle:active { cursor: grabbing; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <h1 class="text-xl font-semibold tracking-tight">TimeBlock Todo</h1>
+            <div id="view-header" class="flex items-center gap-2">
+                </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="flex items-center border rounded-lg p-1 text-sm">
+                <button id="dayViewBtn" class="px-3 py-1 rounded-md" title="Day View">Day</button>
+                <button id="weekViewBtn" class="px-3 py-1 rounded-md bg-blue-600 text-white" title="Week View">Week</button>
+            </div>
+            <button id="importBtn" class="p-2 rounded-full hover:bg-gray-100" title="Import JSON"><i class="fas fa-download"></i></button>
+            <button id="exportBtn" class="p-2 rounded-full hover:bg-gray-100" title="Export JSON"><i class="fas fa-upload"></i></button>
+            <button id="clearBtn" class="p-2 rounded-full hover:bg-red-50 text-red-600" title="Clear all"><i class="fas fa-trash"></i></button>
+        </div>
+    </div>
+  </header>
+
+  <main class="max-w-full mx-auto px-4 py-6">
+    <div id="grid" class="w-full overflow-x-auto">
+      </div>
+    <div class="mt-4 flex justify-center">
+        <button id="addSlotBtn" class="px-4 py-2 text-sm rounded-lg bg-white border shadow-sm hover:bg-gray-50"><i class="fas fa-plus mr-2 text-xs"></i>Add Time Slot</button>
+    </div>
+  </main>
+
+  <div id="task-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
+      <h3 id="modal-title" class="text-lg font-semibold mb-4">Add Task</h3>
+      <form id="task-form" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Title</label>
+          <input id="task-title" type="text" class="mt-1 w-full border rounded-md p-2" maxlength="60" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Notes / Subtasks (optional)</label>
+          <textarea id="task-desc" class="mt-1 w-full border rounded-md p-2" rows="3" maxlength="400" placeholder="One item per line if you like"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" id="cancel-modal" class="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <template id="task-template">
+    <div class="task-card bg-white border border-gray-200 rounded-lg p-3 shadow-sm" draggable="true">
+      <div class="flex items-start justify-between gap-2">
+        <h4 class="font-medium text-gray-800 leading-5 break-words"></h4>
+        <div class="flex items-center gap-2 shrink-0">
+          <button class="edit-btn text-gray-400 hover:text-gray-600" title="Edit"><i class="fas fa-pen text-xs"></i></button>
+          <button class="dup-btn text-gray-400 hover:text-gray-600" title="Duplicate"><i class="fas fa-clone text-xs"></i></button>
+          <button class="del-btn text-gray-400 hover:text-red-600" title="Delete"><i class="fas fa-trash text-xs"></i></button>
+        </div>
+      </div>
+      <pre class="mt-2 text-xs text-gray-600 whitespace-pre-wrap font-sans"></pre>
+    </div>
+  </template>
+
+  <script>
+    // ---------- Config ----------
+    const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    const DEFAULT_SLOTS = [
+      { key: "0830-1030", label: "8:30–10:30" },
+      { key: "1100-1300", label: "11:00–1:00" },
+      { key: "1300-1500", label: "1:00–3:00" },
+    ];
+    const STORAGE_KEY = 'timeblockData.v3';
+
+    // ---------- State ----------
+    let state = {
+      tasks: [],
+      slots: []
+    };
+    let currentView = 'week';
+    let displayedDate = new Date();
+    let currentTarget = { day: null, slot: null, editingId: null };
+
+    // ---------- DOM & Date Helpers ----------
+    const $ = (q, el=document) => el.querySelector(q);
+    const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
+    function cellId(day, slot){ return `cell-${day}__${slot}`; }
+    function zoneOf(day, slot){
+        const cell = document.getElementById(cellId(day, slot));
+        return cell ? cell.querySelector('.drop-zone') : null;
+    }
+    function getMonday(d) {
+        const date = new Date(d);
+        const day = date.getDay() || 7;
+        if (day !== 1) date.setHours(-24 * (day - 1));
+        date.setHours(0,0,0,0);
+        return date;
+    }
+    function formatDate(date) {
+        const d = date.getDate();
+        const m = date.toLocaleString('en-US', { month: 'short' });
+        const y = date.getFullYear().toString().slice(-2);
+        return `${d} ${m} ${y}`;
+    }
+
+    // ---------- App Rendering ----------
+    function renderApp() {
+        $('#grid').innerHTML = '';
+        $('#view-header').innerHTML = '';
+        if (currentView === 'week') {
+            buildWeekView(displayedDate);
+        } else if (currentView === 'day') {
+            buildDayView(displayedDate);
+        }
+        renderTasks();
+    }
+
+    // ---------- Grid Builders ----------
+    function buildWeekView(date) {
+        const monday = getMonday(date);
+        const month = monday.getMonth();
+        const year = monday.getFullYear();
+
+        // Calculate week number
+        const firstOfMonth = new Date(year, month, 1);
+        const firstMondayOfMonth = getMonday(firstOfMonth);
+        const diffDays = Math.round((monday - firstMondayOfMonth) / (1000 * 60 * 60 * 24));
+        const weekOfMonth = Math.floor(diffDays / 7) + 1;
+
+        const weekLabel = `${monday.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} (Week ${weekOfMonth})`;
+
+        $('#view-header').innerHTML = `
+            <div class="flex items-center border rounded-lg p-0.5">
+                <button id="prevWeekBtn" class="p-1.5 rounded-md hover:bg-gray-100" title="Previous Week"><i class="fas fa-chevron-left text-xs"></i></button>
+                <button id="todayBtn" class="px-3 py-0.5 text-sm rounded-md hover:bg-gray-100" title="Go to Today">Today</button>
+                <button id="nextWeekBtn" class="p-1.5 rounded-md hover:bg-gray-100" title="Next Week"><i class="fas fa-chevron-right text-xs"></i></button>
+            </div>
+            <h2 class="text-lg font-medium text-gray-600">${weekLabel}</h2>`;
+
+        $('#prevWeekBtn').onclick = () => { displayedDate.setDate(displayedDate.getDate() - 7); renderApp(); };
+        $('#nextWeekBtn').onclick = () => { displayedDate.setDate(displayedDate.getDate() + 7); renderApp(); };
+        $('#todayBtn').onclick = () => { displayedDate = new Date(); renderApp(); };
+
+        // Build full Mon–Sun grid
+        const grid = $('#grid');
+        grid.innerHTML = '';
+        const table = document.createElement('div');
+
+        const header = document.createElement('div');
+        header.className = 'grid gap-4';
+        const gridTemplateCols = '[time-col] 150px repeat(7, [day-col] 1fr)';
+        header.style.gridTemplateColumns = gridTemplateCols;
+
+        let headerHtml = '<div></div>'; // empty corner cell
+        let daysInWeek = [];
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            daysInWeek.push(d);
+
+            if (d.getMonth() === month) {
+                // Show weekday + full date
+                headerHtml += `
+                  <div class="text-sm font-semibold text-center">
+                    ${d.toLocaleDateString('en-US', { weekday: 'short' })}
+                    <div class="font-normal text-gray-500 text-sm">
+                    ${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short' })} ${d.getFullYear().toString().slice(-2)}
+                    </div>
+                  </div>`;
+            } else {
+                // Blank cell for out-of-month days
+                headerHtml += `<div></div>`;
+            }
+        }
+
+
+        header.innerHTML = headerHtml;
+        table.appendChild(header);
+
+        // Render slots
+        const slotsContainer = document.createElement('div');
+        slotsContainer.id = 'slots-container';
+        slotsContainer.className = 'space-y-4 mt-4';
+        attachRowDnD(slotsContainer);
+
+        state.slots.forEach(slot => {
+            const rowWrap = document.createElement('div');
+            rowWrap.className = 'grid gap-4 items-start slot-row';
+            rowWrap.style.gridTemplateColumns = gridTemplateCols;
+            rowWrap.draggable = true;
+            rowWrap.dataset.slotKey = slot.key;
+            rowWrap.appendChild(createTimeColumn(slot));
+
+            daysInWeek.forEach(d => {
+                if (d.getMonth() === month) {
+                    const dayName = DAYS[(d.getDay() + 6) % 7];
+                    rowWrap.appendChild(createDayCell(dayName, slot, d));
+                } else {
+                    rowWrap.appendChild(document.createElement('div')); // blank cell
+                }
+            });
+
+            slotsContainer.appendChild(rowWrap);
+        });
+
+        table.appendChild(slotsContainer);
+        grid.appendChild(table);
+    }
+
+
+
+    function buildDayView(date) {
+        const dayIndex = (date.getDay() + 6) % 7;
+        const day = DAYS[dayIndex];
+
+        $('#view-header').innerHTML = `
+            <div class="flex items-center border rounded-lg p-0.5">
+                <button id="prevDayBtn" class="p-1.5 rounded-md hover:bg-gray-100" title="Previous Day"><i class="fas fa-chevron-left text-xs"></i></button>
+                <button id="todayBtn" class="px-3 py-0.5 text-sm rounded-md hover:bg-gray-100" title="Go to Today">Today</button>
+                <button id="nextDayBtn" class="p-1.5 rounded-md hover:bg-gray-100" title="Next Day"><i class="fas fa-chevron-right text-xs"></i></button>
+            </div>
+            <h2 class="text-lg font-medium text-gray-600">
+                ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </h2>`;
+
+        $('#prevDayBtn').onclick = () => { displayedDate.setDate(displayedDate.getDate() - 1); renderApp(); };
+        $('#nextDayBtn').onclick = () => { displayedDate.setDate(displayedDate.getDate() + 1); renderApp(); };
+        $('#todayBtn').onclick = () => { displayedDate = new Date(); renderApp(); };
+
+        const grid = $('#grid');
+        grid.innerHTML = '';
+
+        // wrapper to center the table
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex justify-center';
+
+        const table = document.createElement('div');
+        table.className = 'inline-block';
+
+        const gridTemplateCols = '[time-col] 150px [day-cols] 400px';
+
+        // header
+        const header = document.createElement('div');
+        header.className = 'grid gap-4';
+        header.style.gridTemplateColumns = gridTemplateCols;
+        header.innerHTML = `
+          <div></div>
+          <div class="text-sm font-semibold text-center">
+            ${day.toUpperCase()}
+            <div class="font-normal text-gray-500">${formatDate(date)}</div>
+          </div>`;
+        table.appendChild(header);
+
+        // slots
+        const slotsContainer = document.createElement('div');
+        slotsContainer.id = 'slots-container';
+        slotsContainer.className = 'space-y-4 mt-4';
+        attachRowDnD(slotsContainer);
+
+        state.slots.forEach(slot => {
+            const rowWrap = document.createElement('div');
+            rowWrap.className = 'grid gap-4 items-start slot-row';
+            rowWrap.style.gridTemplateColumns = gridTemplateCols;
+            rowWrap.draggable = true;
+            rowWrap.dataset.slotKey = slot.key;
+            rowWrap.appendChild(createTimeColumn(slot));
+            rowWrap.appendChild(createDayCell(day, slot));
+            slotsContainer.appendChild(rowWrap);
+        });
+        table.appendChild(slotsContainer);
+
+        wrapper.appendChild(table);
+        grid.appendChild(wrapper);
+    }
+
+
+    function createTimeColumn(slot) {
+        const timeCol = document.createElement('div');
+        timeCol.className = 'text-sm text-gray-600 flex items-center pl-2 h-full';
+        timeCol.innerHTML = `<i class="fas fa-grip-vertical drag-handle text-gray-300 mr-2" title="Drag to reorder"></i><span class="flex-grow">${slot.label}</span>`;
+
+        const editSlotBtn = document.createElement('button');
+        editSlotBtn.className = "text-gray-300 hover:text-blue-500 px-1";
+        editSlotBtn.title = "Edit time slot label";
+        editSlotBtn.innerHTML = `<i class="fas fa-pen text-xs"></i>`;
+        editSlotBtn.onclick = () => editSlot(slot.key);
+        timeCol.appendChild(editSlotBtn);
+
+        const delSlotBtn = document.createElement('button');
+        delSlotBtn.className = "text-gray-300 hover:text-red-500 pl-1 pr-2";
+        delSlotBtn.title = "Delete time slot";
+        delSlotBtn.innerHTML = `<i class="fas fa-trash text-xs"></i>`;
+        delSlotBtn.onclick = () => deleteSlot(slot.key);
+        timeCol.appendChild(delSlotBtn);
+        return timeCol;
+    }
+
+    function createDayCell(day, slot) {
+        const cell = document.createElement('section');
+        cell.id = cellId(day, slot.key);
+        cell.className = 'bg-white rounded-xl border shadow-sm p-3';
+        cell.innerHTML = `
+            <div class="flex items-center justify-end mb-2">
+                <button class="add-btn text-gray-400 hover:text-gray-700" title="Add task"><i class="fas fa-plus text-xs"></i></button>
+            </div>
+            <div class="drop-zone min-h-[100px] space-y-3"></div>`;
+        attachTaskDnD(cell.querySelector('.drop-zone'));
+        cell.querySelector('.add-btn').addEventListener('click', () => {
+            currentTarget.day = day; currentTarget.slot = slot.key; currentTarget.editingId = null; openModal();
+        });
+        return cell;
+    }
+
+    // ---------- Modal & Task Management ----------
+    function openModal(){
+      $('#task-title').value = ''; $('#task-desc').value = '';
+      $('#modal-title').textContent = currentTarget.editingId ? 'Edit Task' : 'Add Task';
+      if(currentTarget.editingId){
+        const t = state.tasks.find(t => t.id === currentTarget.editingId);
+        if(t){ $('#task-title').value = t.title; $('#task-desc').value = t.desc || ''; }
+      }
+      $('#task-modal').classList.replace('hidden', 'flex');
+      setTimeout(() => $('#task-title').focus(), 0);
+    }
+    function closeModal(){ $('#task-modal').classList.replace('flex', 'hidden'); }
+    $('#cancel-modal').addEventListener('click', closeModal);
+    $('#task-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const title = $('#task-title').value.trim();
+      const desc = $('#task-desc').value.trim();
+      if(!title) return;
+      if(currentTarget.editingId){
+        const t = state.tasks.find(t => t.id === currentTarget.editingId);
+        if(t){ t.title = title; t.desc = desc; }
+      } else {
+        const zone = zoneOf(currentTarget.day, currentTarget.slot);
+        const order = zone ? zone.children.length : 0;
+        state.tasks.push({ id: crypto.randomUUID(), title, desc, day: currentTarget.day, slot: currentTarget.slot, order });
+      }
+      save(); renderTasks(); closeModal();
+    });
+    function renderTasks(){
+      $$('.drop-zone').forEach(zone => zone.innerHTML = '');
+      const tasksByCell = {};
+      state.tasks.forEach(t => {
+        const key = `${t.day}-${t.slot}`;
+        if (!tasksByCell[key]) {
+            tasksByCell[key] = [];
+        }
+        tasksByCell[key].push(t);
+      });
+      for (const key in tasksByCell) {
+          tasksByCell[key].sort((a,b) => a.order - b.order);
+      }
+      Object.values(tasksByCell).flat().forEach(task => {
+        const zone = zoneOf(task.day, task.slot);
+        if (zone) {
+            zone.appendChild(taskNode(task));
+        }
+      });
+    }
+    function taskNode(task){
+      const node = $('#task-template').content.firstElementChild.cloneNode(true);
+      node.dataset.id = task.id;
+      node.querySelector('h4').textContent = task.title;
+      node.querySelector('pre').textContent = task.desc || '';
+      node.addEventListener('dragstart', () => node.classList.add('dragging'));
+      node.addEventListener('dragend', () => { node.classList.remove('dragging'); renumberOrders(); save(); });
+      node.querySelector('.del-btn').addEventListener('click', () => {
+        state.tasks = state.tasks.filter(t => t.id !== task.id);
+        save(); renderTasks();
+      });
+      node.querySelector('.edit-btn').addEventListener('click', () => {
+        currentTarget.day = task.day; currentTarget.slot = task.slot; currentTarget.editingId = task.id; openModal();
+      });
+      node.querySelector('.dup-btn').addEventListener('click', () => {
+        const zone = zoneOf(task.day, task.slot);
+        if (!zone) return;
+        const copy = { ...task, id: crypto.randomUUID(), order: zone.children.length };
+        state.tasks.push(copy); save(); renderTasks();
+      });
+      return node;
+    }
+
+    // ---------- DnD for TASKS ----------
+    function attachTaskDnD(zone){
+      zone.addEventListener('dragover', e => {
+        e.preventDefault(); zone.classList.add('drop-highlight');
+        const after = getDragAfterElement(zone, e.clientY);
+        const dragging = $('.dragging');
+        if(!dragging) return;
+        if(after == null) zone.appendChild(dragging); else zone.insertBefore(dragging, after);
+      });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drop-highlight'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault(); zone.classList.remove('drop-highlight');
+        const dragging = $('.dragging');
+        if(!dragging) return;
+        const id = dragging.dataset.id;
+        const [day, slot] = zone.closest('section').id.replace('cell-','').split('__');
+        const task = state.tasks.find(t => t.id === id);
+        if(task){ task.day = day; task.slot = slot; }
+        renumberOrders(); save();
+      });
+    }
+    function getDragAfterElement(container, y){
+      const els = [...container.querySelectorAll('.task-card:not(.dragging)')];
+      return els.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height/2;
+        if(offset < 0 && offset > closest.offset){ return { offset, element: child }; }
+        return closest;
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+    function renumberOrders(){
+      document.querySelectorAll('section[id^="cell-"]').forEach(cell => {
+        const [day, slotKey] = cell.id.replace('cell-', '').split('__');
+        [...cell.querySelector('.drop-zone').children].forEach((el, idx) => {
+            const t = state.tasks.find(t => t.id === el.dataset.id);
+            if(t) { t.order = idx; t.day = day; t.slot = slotKey; }
+        });
+      });
+    }
+
+    // ---------- DnD for ROWS ----------
+    function attachRowDnD(container) {
+        container.addEventListener('dragstart', e => {
+            if (e.target.classList.contains('slot-row')) {
+                e.target.classList.add('row-dragging');
+            }
+        });
+        container.addEventListener('dragend', e => {
+            if (e.target.classList.contains('slot-row')) {
+                e.target.classList.remove('row-dragging');
+            }
+        });
+        container.addEventListener('dragover', e => {
+            e.preventDefault();
+            const draggingRow = container.querySelector('.row-dragging');
+            if (!draggingRow) return;
+            const afterRow = getDragAfterRow(container, e.clientY);
+            if (afterRow == null) {
+                container.appendChild(draggingRow);
+            } else {
+                container.insertBefore(draggingRow, afterRow);
+            }
+        });
+        container.addEventListener('drop', e => {
+            e.preventDefault();
+            const draggingRow = container.querySelector('.row-dragging');
+            if (draggingRow) draggingRow.classList.remove('row-dragging');
+            const newOrderedKeys = Array.from(container.querySelectorAll('.slot-row')).map(row => row.dataset.slotKey);
+            state.slots.sort((a, b) => newOrderedKeys.indexOf(a.key) - newOrderedKeys.indexOf(b.key));
+            save();
+            renderApp();
+        });
+    }
+    function getDragAfterRow(container, y) {
+        const draggableRows = [...container.querySelectorAll('.slot-row:not(.row-dragging)')];
+        return draggableRows.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // ---------- Slot Management ----------
+    function addSlot() {
+        const label = prompt("Enter new time slot label (e.g., 4:00 PM - 5:00 PM):");
+        if (!label || !label.trim()) return;
+        const key = `slot${Date.now()}`;
+        state.slots.push({ key, label: label.trim() });
+        save();
+        renderApp();
+    }
+    function editSlot(key) {
+        const slot = state.slots.find(s => s.key === key);
+        if (!slot) return;
+        const newLabel = prompt("Enter new label for this time slot:", slot.label);
+        if (newLabel && newLabel.trim()) {
+            slot.label = newLabel.trim();
+            save();
+            renderApp();
+        }
+    }
+    function deleteSlot(key) {
+        if (!confirm("Are you sure you want to delete this time slot? All tasks within it will also be deleted.")) return;
+        state.slots = state.slots.filter(s => s.key !== key);
+        state.tasks = state.tasks.filter(t => t.slot !== key);
+        save();
+        renderApp();
+    }
+    $('#addSlotBtn').addEventListener('click', addSlot);
+
+    // ---------- Persistence & Actions ----------
+    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function load(){
+      try{
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if(data && data.slots && data.tasks) {
+            state = data;
+        } else {
+            state.slots = [...DEFAULT_SLOTS];
+        }
+      }catch(e){
+        console.warn('No saved data, using defaults.');
+        state.slots = [...DEFAULT_SLOTS];
+      }
+    }
+    $('#exportBtn').addEventListener('click', ()=>{
+      const data = {
+        slots: state.slots,
+        tasks: state.tasks
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'timeblock-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    $('#importBtn').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0]; if(!file) return;
+        if(!confirm('Import will replace your current data. Continue?')) return;
+        const fr = new FileReader();
+        fr.onload = () => {
+            try{
+                const importedState = JSON.parse(fr.result);
+                if (importedState && importedState.tasks && importedState.slots) {
+                    state = importedState;
+                    save();
+                    renderApp();
+                } else {
+                    alert('Invalid file format.');
+                }
+            } catch{ alert('Invalid file.'); }
+        };
+        fr.readAsText(file);
+      };
+      input.click();
+    });
+    $('#clearBtn').addEventListener('click', ()=>{
+      if(confirm('Clear ALL tasks? (Time slots will stay)')){
+        state.tasks = [];       // keep slots intact
+        save();
+        renderApp();
+      }
+    });
+
+    // ---------- View Switching ----------
+    function switchView(view) {
+        currentView = view;
+        $('#dayViewBtn').classList.toggle('bg-blue-600', view === 'day');
+        $('#dayViewBtn').classList.toggle('text-white', view === 'day');
+        $('#weekViewBtn').classList.toggle('bg-blue-600', view === 'week');
+        $('#weekViewBtn').classList.toggle('text-white', view === 'week');
+        renderApp();
+    }
+    $('#dayViewBtn').addEventListener('click', () => switchView('day'));
+    $('#weekViewBtn').addEventListener('click', () => switchView('week'));
+
+    // ---------- Init ----------
+    function init() {
+        load();
+        renderApp();
+    }
+    init();
+  </script>
+</body>
+</html>
