@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cab Economics & Breakeven Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    .dark ::-webkit-scrollbar-track { background: #111827; }
+    .dark ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    input[type=range] {
+      accent-color: #0284c7;
+    }
+    .dark input[type=range] {
+      accent-color: #38bdf8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-[#0b0f19] dark:text-gray-100 min-h-screen pb-12 antialiased transition-colors duration-300">
+
+  <!-- Top Header Navigation -->
+  <header class="border-b border-slate-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur sticky top-0 z-50 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-sky-500/20">
+          🚕
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-none">Cab Unit Economics</h1>
+          <p class="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Breakeven & 6-Year Profitability Model</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- Export & Import Controls -->
+        <button onclick="exportJSON()" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs font-semibold transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          <span class="hidden sm:inline">Export Config</span> (JSON)
+        </button>
+
+        <label class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+          <span class="hidden sm:inline">Import Config</span>
+          <input type="file" id="importFileInput" accept=".json" onchange="importJSON(event)" class="hidden">
+        </label>
+
+        <!-- Theme Toggle Button -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-700 text-xs font-semibold transition">
+          <span id="themeIcon">☀️ Light</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+
+    <!-- Section 1: Inputs & Parameters -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Capital & Vehicle Setup -->
+      <div class="bg-white dark:bg-gray-900/90 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-5 transition-colors duration-300">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-3">
+          <h2 class="text-base font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            1. Capital & Vehicle Financing
+          </h2>
+          <span class="text-xs text-slate-500 dark:text-gray-500">Fixed Cost Drivers</span>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-sm">
+            <label for="carCost" class="text-slate-700 dark:text-gray-300">Car On-Road Price (₹)</label>
+            <input type="number" id="carCost" value="700000" step="5000" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+          </div>
+
+          <div class="flex items-center justify-between text-sm">
+            <label for="downPct" class="text-slate-700 dark:text-gray-300">Downpayment (%)</label>
+            <div class="flex items-center gap-2">
+              <input type="number" id="downPct" value="15" min="0" max="100" class="w-24 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+              <span class="text-xs text-slate-500 dark:text-gray-400 w-20 text-right mono" id="lblDownAmount">₹1,05,000</span>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-sm">
+            <label for="interestRate" class="text-slate-700 dark:text-gray-300">Loan Interest Rate (% p.a.)</label>
+            <input type="number" id="interestRate" value="10.0" step="0.1" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+          </div>
+
+          <div class="flex items-center justify-between text-sm">
+            <label for="loanMonths" class="text-slate-700 dark:text-gray-300">Loan Tenure (Months)</label>
+            <input type="number" id="loanMonths" value="60" step="6" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+          </div>
+
+          <!-- Opportunity Cost Toggle & Input -->
+          <div class="border-t border-slate-200 dark:border-gray-800 pt-3 space-y-3">
+            <div class="flex items-center justify-between text-sm">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" id="toggleOppCost" checked onchange="calculateModel()" class="w-4 h-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500 dark:bg-gray-950 dark:border-gray-700 cursor-pointer">
+                <label for="toggleOppCost" class="text-slate-700 dark:text-gray-300 font-medium cursor-pointer">Include Opportunity Cost (FD Lost Interest)</label>
+              </div>
+            </div>
+
+            <div id="oppCostInputWrapper" class="flex items-center justify-between text-sm pl-6">
+              <label for="fdRate" class="text-slate-500 dark:text-gray-400">FD Rate Opp. Cost (% p.a.)</label>
+              <input type="number" id="fdRate" value="7.0" step="0.1" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Operational & Variable Inputs -->
+      <div class="bg-white dark:bg-gray-900/90 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-5 transition-colors duration-300">
+        <div class="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-3">
+          <h2 class="text-base font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            2. Operational & Revenue Drivers
+          </h2>
+          <span class="text-xs text-slate-500 dark:text-gray-500">Revenue & Fuel</span>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-sm">
+            <label for="netTariff" class="text-slate-700 dark:text-gray-300">Net Revenue Rate (₹/km)</label>
+            <input type="number" id="netTariff" value="11.00" step="0.25" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+          </div>
+
+          <div class="flex items-center justify-between text-sm">
+            <label for="cngPrice" class="text-slate-700 dark:text-gray-300">CNG Fuel Cost (₹/kg)</label>
+            <input type="number" id="cngPrice" value="97.00" step="1" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+          </div>
+
+          <div class="flex items-center justify-between text-sm">
+            <label for="cngMileage" class="text-slate-700 dark:text-gray-300">CNG Mileage (km/kg)</label>
+            <input type="number" id="cngMileage" value="28.0" step="0.5" class="w-32 bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 rounded-lg px-3 py-1.5 text-right font-semibold text-slate-900 dark:text-white mono transition">
+          </div>
+
+          <div class="flex items-center justify-between text-sm pt-2 border-t border-slate-200 dark:border-gray-800">
+            <span class="text-slate-600 dark:text-gray-400 font-medium">CNG Fuel Expense Rate</span>
+            <span class="text-amber-600 dark:text-amber-400 font-bold mono" id="lblCngPerKm">₹3.46 / km</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section 2: Comprehensive Maintenance Breakdown (Collapsible & Dedicated) -->
+    <div class="bg-white dark:bg-gray-900/90 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-300">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-3">
+        <div>
+          <h2 class="text-base font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+            3. Vehicle Maintenance & Servicing Costs
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-gray-400">Routine oil services plus distance and time-triggered wear items</p>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-slate-500 dark:text-gray-400">Total Maintenance Rate</div>
+          <div class="text-lg font-bold text-amber-600 dark:text-amber-400 mono" id="lblTotalMaintPerKm">₹1.00 / km</div>
+        </div>
+      </div>
+
+      <!-- Routine Service Collapsible Block -->
+      <div class="border border-slate-200 dark:border-gray-800 rounded-xl overflow-hidden">
+        <button onclick="toggleCollapse('routineServiceBody', 'routineServiceArrow')" class="w-full bg-slate-100/70 dark:bg-gray-950/70 px-4 py-3 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-gray-300 hover:bg-slate-200/50 dark:hover:bg-gray-800/50 transition">
+          <div class="flex items-center space-x-2">
+            <span>A. Routine Servicing Estimator (Oil, Filters, Brakes)</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span class="text-sky-600 dark:text-sky-400 mono" id="lblRoutineCostKm">₹0.70 / km</span>
+            <span id="routineServiceArrow" class="text-slate-400 transition-transform duration-200">▲</span>
+          </div>
+        </button>
+        <div id="routineServiceBody" class="p-4 space-y-3 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label for="serviceInterval" class="text-slate-600 dark:text-gray-400 block mb-1">Service Interval (KM)</label>
+              <input type="number" id="serviceInterval" value="10000" step="1000" oninput="calculateMaintenanceTotal()" class="w-full bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-right mono text-slate-900 dark:text-white">
+            </div>
+            <div>
+              <label for="serviceCost" class="text-slate-600 dark:text-gray-400 block mb-1">Cost Per Service (₹)</label>
+              <input type="number" id="serviceCost" value="7000" step="500" oninput="calculateMaintenanceTotal()" class="w-full bg-slate-50 dark:bg-gray-950 border border-slate-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-right mono text-slate-900 dark:text-white">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Component Wear Collapsible Block -->
+      <div class="border border-slate-200 dark:border-gray-800 rounded-xl overflow-hidden">
+        <button onclick="toggleCollapse('wearItemsBody', 'wearItemsArrow')" class="w-full bg-slate-100/70 dark:bg-gray-950/70 px-4 py-3 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-gray-300 hover:bg-slate-200/50 dark:hover:bg-gray-800/50 transition">
+          <div class="flex items-center space-x-2">
+            <span>B. Component Wear & Replacements (Tyres, Shock Absorbers, Battery, Clutch)</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span class="text-sky-600 dark:text-sky-400 mono" id="lblExtraWearCostKm">₹0.30 / km</span>
+            <button onclick="event.stopPropagation(); addWearItem()" class="px-2 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded text-[11px] font-medium transition">+ Add Item</button>
+            <span id="wearItemsArrow" class="text-slate-400 transition-transform duration-200">▲</span>
+          </div>
+        </button>
+        <div id="wearItemsBody" class="p-4 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 space-y-2">
+          <div id="wearItemsContainer" class="space-y-2">
+            <!-- Dynamic wear items populated via JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section 3: Custom Operational Fixed Costs Builder (Matching Collapsible Dropdown Style) -->
+    <div class="bg-white dark:bg-gray-900/90 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-300">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-3">
+        <div>
+          <h2 class="text-base font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            4. Operational Fixed Overhead Items
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-gray-400">Recurring expenses like insurance, permits, fitness passing, or GPS tracking</p>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-slate-500 dark:text-gray-400">Total Fixed Overhead</div>
+          <div class="text-lg font-bold text-sky-600 dark:text-sky-400 mono" id="lblTotalFixedOps">₹22,000 / yr</div>
+        </div>
+      </div>
+
+      <!-- Collapsible Container matching Maintenance style -->
+      <div class="border border-slate-200 dark:border-gray-800 rounded-xl overflow-hidden">
+        <button onclick="toggleCollapse('fixedOpsBody', 'fixedOpsArrow')" class="w-full bg-slate-100/70 dark:bg-gray-950/70 px-4 py-3 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-gray-300 hover:bg-slate-200/50 dark:hover:bg-gray-800/50 transition">
+          <div class="flex items-center space-x-2">
+            <span>Itemized Operational Overheads List</span>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="event.stopPropagation(); addFixedItem()" class="px-2 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded text-[11px] font-medium transition">+ Add Overhead Item</button>
+            <span id="fixedOpsArrow" class="text-slate-400 transition-transform duration-200">▲</span>
+          </div>
+        </button>
+        <div id="fixedOpsBody" class="p-4 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 space-y-2">
+          <div id="fixedItemsContainer" class="space-y-2">
+            <!-- Dynamic Fixed Line Items inserted via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live KPI Summary Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 relative overflow-hidden transition-colors duration-300 shadow-sm dark:shadow-none">
+        <div class="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Monthly Loan EMI</div>
+        <div class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 mono" id="kpiEmi">₹0</div>
+        <div class="text-[11px] text-slate-400 dark:text-gray-500 mt-1">Years 1 to 5 (₹0 in Yr 6)</div>
+        <div class="absolute right-3 bottom-3 opacity-10 text-4xl">💳</div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 relative overflow-hidden transition-colors duration-300 shadow-sm dark:shadow-none">
+        <div class="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Variable Cost / KM</div>
+        <div class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 mono" id="kpiVarKm">₹0.00</div>
+        <div class="text-[11px] text-slate-400 dark:text-gray-500 mt-1">CNG + Full Maintenance</div>
+        <div class="absolute right-3 bottom-3 opacity-10 text-4xl">⛽</div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl p-5 relative overflow-hidden transition-colors duration-300 shadow-sm dark:shadow-none">
+        <div class="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Fixed Monthly Overhead</div>
+        <div class="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1 mono" id="kpiFixedMonthly">₹0</div>
+        <div class="text-[11px] text-slate-400 dark:text-gray-500 mt-1">EMI + Fixed Ops + Opp. Cost</div>
+        <div class="absolute right-3 bottom-3 opacity-10 text-4xl">🛡️</div>
+      </div>
+
+      <div class="bg-gradient-to-br from-white to-sky-50 dark:from-gray-900 dark:to-sky-950/40 border border-sky-300 dark:border-sky-500/30 rounded-2xl p-5 relative overflow-hidden transition-colors duration-300 shadow-sm">
+        <div class="text-xs font-medium text-sky-600 dark:text-sky-400 uppercase tracking-wider">Daily Breakeven Run</div>
+        <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1 mono" id="kpiBreakeven">0 km/day</div>
+        <div class="text-[11px] text-slate-500 dark:text-gray-400 mt-1">Based on 25 working days/mo</div>
+        <div class="absolute right-3 bottom-3 opacity-15 text-4xl">🎯</div>
+      </div>
+    </div>
+
+    <!-- Section 4: Daily Mileage Profitability Matrix -->
+    <div class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-300">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-gray-800">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">Daily Mileage Profitability Matrix (Years 1–5)</h2>
+          <p class="text-xs text-slate-500 dark:text-gray-400">Monthly breakdown across common driving schedules (25 days/month)</p>
+        </div>
+        <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-gray-400">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500 inline-block"></span> Profit</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500 inline-block"></span> Loss</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-sky-500/20 border border-sky-500 inline-block"></span> Exact Breakeven</span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-700 dark:text-gray-300">
+          <thead class="text-xs text-slate-500 dark:text-gray-400 uppercase bg-slate-100/70 dark:bg-gray-950/60 border-b border-slate-200 dark:border-gray-800">
+            <tr>
+              <th scope="col" class="py-3.5 px-4 font-semibold">Daily Run</th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-right">Monthly Distance</th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-right">Monthly Revenue</th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-right">Monthly Var Cost</th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-right">Monthly Fixed Overhead</th>
+              <th scope="col" class="py-3.5 px-4 font-semibold text-right">Net Cash Profit / Mo</th>
+            </tr>
+          </thead>
+          <tbody id="scenarioTable" class="divide-y divide-slate-200 dark:divide-gray-800/60 mono text-xs">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 5: Interactive Multi-Year Projection (Years 1-6) -->
+    <div class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-300">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-gray-800">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">6-Year Multi-Period Projection</h2>
+          <p class="text-xs text-slate-500 dark:text-gray-400">Drag slider to test long-term cash flow changes after Year 5 EMI payoff</p>
+        </div>
+
+        <div class="bg-slate-100 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl px-4 py-2 flex items-center space-x-4">
+          <span class="text-xs font-semibold text-slate-500 dark:text-gray-400">Custom Run:</span>
+          <input type="range" id="customDailySlider" min="50" max="300" step="5" value="100" class="w-36 h-2 bg-slate-200 dark:bg-gray-800 rounded-lg cursor-pointer">
+          <span class="text-sm font-bold text-sky-600 dark:text-sky-400 min-w-[80px] text-right mono" id="sliderValLabel">100 km/day</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl p-4">
+          <div class="text-xs text-slate-500 dark:text-gray-400">Years 1–5 Annual Profit</div>
+          <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 mono" id="lblYr1_5Profit">₹0</div>
+          <div class="text-[11px] text-slate-400 dark:text-gray-500 mt-0.5">With EMI repayment</div>
+        </div>
+        <div class="bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl p-4">
+          <div class="text-xs text-slate-500 dark:text-gray-400">Year 6 Annual Profit (Post-Loan)</div>
+          <div class="text-xl font-bold text-sky-600 dark:text-sky-400 mt-1 mono" id="lblYr6Profit">₹0</div>
+          <div class="text-[11px] text-slate-400 dark:text-gray-500 mt-0.5">EMI drops to ₹0 / month</div>
+        </div>
+        <div class="bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl p-4">
+          <div class="text-xs text-slate-500 dark:text-gray-400">Total 6-Year Net Cash Flow</div>
+          <div class="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 mono" id="lblTotal6YrProfit">₹0</div>
+          <div class="text-[11px] text-slate-400 dark:text-gray-500 mt-0.5">Cumulative cash profit</div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-700 dark:text-gray-300">
+          <thead class="text-xs text-slate-500 dark:text-gray-400 uppercase bg-slate-100/70 dark:bg-gray-950/60 border-b border-slate-200 dark:border-gray-800">
+            <tr>
+              <th scope="col" class="py-3 px-4 font-semibold">Year</th>
+              <th scope="col" class="py-3 px-4 font-semibold text-right">Annual Run (KM)</th>
+              <th scope="col" class="py-3 px-4 font-semibold text-right">Gross Revenue</th>
+              <th scope="col" class="py-3 px-4 font-semibold text-right">Variable Costs</th>
+              <th scope="col" class="py-3 px-4 font-semibold text-right">Annual EMI</th>
+              <th scope="col" class="py-3 px-4 font-semibold text-right">Ops + Opp. Cost</th>
+              <th scope="col" class="py-3 px-4 font-semibold text-right">Annual Cash Profit</th>
+            </tr>
+          </thead>
+          <tbody id="multiYearTable" class="divide-y divide-slate-200 dark:divide-gray-800/60 mono text-xs">
+            <!-- Dynamic Rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Theme Switch
+    let isDark = true;
+    function toggleTheme() {
+      isDark = !isDark;
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('themeIcon').innerText = '☀️ Light';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeIcon').innerText = '🌙 Dark';
+      }
+    }
+    document.documentElement.classList.add('dark');
+
+    // Section Collapsible Helper
+    function toggleCollapse(bodyId, arrowId) {
+      const body = document.getElementById(bodyId);
+      const arrow = document.getElementById(arrowId);
+      if (body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        arrow.innerText = '▲';
+      } else {
+        body.classList.add('hidden');
+        arrow.innerText = '▼';
+      }
+    }
+
+    // Dynamic Maintenance Wear Items Data
+    let wearItems = [
+      { id: 1, name: 'Tyres & Battery Set', cost: 15000, triggerType: 'km', triggerVal: 50000 },
+      { id: 2, name: 'Shock Absorbers & Clutch Overhaul', cost: 20000, triggerType: 'km', triggerVal: 100000 }
+    ];
+
+    function renderWearItems() {
+      const container = document.getElementById('wearItemsContainer');
+      container.innerHTML = '';
+
+      wearItems.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl p-2.5 text-xs';
+        div.innerHTML = `
+          <input type="text" value="${item.name}" onchange="updateWearItem(${item.id}, 'name', this.value)" placeholder="Component Name" class="flex-grow min-w-[150px] bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 rounded-md px-2.5 py-1 text-slate-900 dark:text-white font-medium">
+          
+          <div class="flex items-center gap-1">
+            <span class="text-slate-500 dark:text-gray-400">Cost: ₹</span>
+            <input type="number" value="${item.cost}" onchange="updateWearItem(${item.id}, 'cost', parseFloat(this.value)||0)" class="w-24 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 rounded-md px-2 py-1 text-right mono font-semibold text-slate-900 dark:text-white">
+          </div>
+
+          <div class="flex items-center gap-1">
+            <span class="text-slate-500 dark:text-gray-400">Every:</span>
+            <input type="number" value="${item.triggerVal}" onchange="updateWearItem(${item.id}, 'triggerVal', parseFloat(this.value)||1)" class="w-24 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 rounded-md px-2 py-1 text-right mono font-semibold text-slate-900 dark:text-white">
+            <select onchange="updateWearItem(${item.id}, 'triggerType', this.value)" class="bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-md px-2 py-1 text-xs">
+              <option value="km" ${item.triggerType === 'km' ? 'selected' : ''}>KM</option>
+              <option value="months" ${item.triggerType === 'months' ? 'selected' : ''}>Months</option>
+            </select>
+          </div>
+
+          <button onclick="removeWearItem(${item.id})" class="text-rose-500 hover:text-rose-600 p-1 text-sm font-bold ml-auto">✕</button>
+        `;
+        container.appendChild(div);
+      });
+
+      calculateMaintenanceTotal();
+    }
+
+    function addWearItem() {
+      wearItems.push({
+        id: Date.now(),
+        name: 'New Component Wear',
+        cost: 5000,
+        triggerType: 'km',
+        triggerVal: 40000
+      });
+      renderWearItems();
+    }
+
+    function removeWearItem(id) {
+      wearItems = wearItems.filter(item => item.id !== id);
+      renderWearItems();
+    }
+
+    function updateWearItem(id, field, value) {
+      const item = wearItems.find(i => i.id === id);
+      if (item) {
+        item[field] = value;
+        calculateMaintenanceTotal();
+      }
+    }
+
+    function calculateMaintenanceTotal() {
+      // 1. Routine Service per KM
+      const interval = parseFloat(document.getElementById('serviceInterval').value) || 10000;
+      const serviceCost = parseFloat(document.getElementById('serviceCost').value) || 7000;
+      const routineRatePerKm = interval > 0 ? (serviceCost / interval) : 0.70;
+      document.getElementById('lblRoutineCostKm').innerText = '₹' + routineRatePerKm.toFixed(2) + ' / km';
+
+      // 2. Extra Wear Items per KM
+      let wearRatePerKm = 0;
+      wearItems.forEach(item => {
+        if (item.triggerType === 'km') {
+          if (item.triggerVal > 0) wearRatePerKm += (item.cost / item.triggerVal);
+        } else if (item.triggerType === 'months') {
+          const equivKm = item.triggerVal * 2500;
+          if (equivKm > 0) wearRatePerKm += (item.cost / equivKm);
+        }
+      });
+
+      document.getElementById('lblExtraWearCostKm').innerText = '₹' + wearRatePerKm.toFixed(2) + ' / km';
+
+      const totalMaintPerKm = routineRatePerKm + wearRatePerKm;
+      document.getElementById('lblTotalMaintPerKm').innerText = '₹' + totalMaintPerKm.toFixed(2) + ' / km';
+
+      calculateModel(totalMaintPerKm);
+    }
+
+    // Dynamic Fixed Items Data
+    let fixedItems = [
+      { id: 1, name: 'Commercial Insurance', amount: 18000, freq: 'annual' },
+      { id: 2, name: 'State Permit & Fitness Passing', amount: 4000, freq: 'annual' }
+    ];
+
+    function renderFixedItems() {
+      const container = document.getElementById('fixedItemsContainer');
+      container.innerHTML = '';
+
+      fixedItems.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-2 bg-slate-50 dark:bg-gray-950/60 border border-slate-200 dark:border-gray-800 rounded-xl p-2.5 text-xs';
+        div.innerHTML = `
+          <input type="text" value="${item.name}" onchange="updateFixedItem(${item.id}, 'name', this.value)" placeholder="Item Description" class="flex-grow bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 rounded-md px-2.5 py-1 text-slate-900 dark:text-white font-medium">
+          <input type="number" value="${item.amount}" onchange="updateFixedItem(${item.id}, 'amount', parseFloat(this.value)||0)" class="w-28 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 rounded-md px-2.5 py-1 text-right mono font-semibold text-slate-900 dark:text-white">
+          <select onchange="updateFixedItem(${item.id}, 'freq', this.value)" class="bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-300 rounded-md px-2 py-1 text-xs">
+            <option value="annual" ${item.freq === 'annual' ? 'selected' : ''}>/ Year</option>
+            <option value="monthly" ${item.freq === 'monthly' ? 'selected' : ''}>/ Month</option>
+          </select>
+          <button onclick="removeFixedItem(${item.id})" class="text-rose-500 hover:text-rose-600 p-1 text-sm font-bold">✕</button>
+        `;
+        container.appendChild(div);
+      });
+
+      calculateMaintenanceTotal();
+    }
+
+    function addFixedItem() {
+      fixedItems.push({ id: Date.now(), name: 'New Expense Line', amount: 1000, freq: 'annual' });
+      renderFixedItems();
+    }
+
+    function removeFixedItem(id) {
+      fixedItems = fixedItems.filter(item => item.id !== id);
+      renderFixedItems();
+    }
+
+    function updateFixedItem(id, field, value) {
+      const item = fixedItems.find(i => i.id === id);
+      if (item) {
+        item[field] = value;
+        calculateMaintenanceTotal();
+      }
+    }
+
+    function getTotalAnnualFixedOps() {
+      return fixedItems.reduce((acc, item) => {
+        return acc + (item.freq === 'annual' ? item.amount : item.amount * 12);
+      }, 0);
+    }
+
+    const fmtINR = (val) => '₹' + Math.round(val).toLocaleString('en-IN');
+
+    function calculateModel(overrideMaintPerKm) {
+      const carCost = parseFloat(document.getElementById('carCost').value) || 0;
+      const downPct = (parseFloat(document.getElementById('downPct').value) || 0) / 100;
+      const interestRate = (parseFloat(document.getElementById('interestRate').value) || 0) / 100;
+      const loanMonths = parseInt(document.getElementById('loanMonths').value) || 60;
+      const fdRate = (parseFloat(document.getElementById('fdRate').value) || 0) / 100;
+      const includeOppCost = document.getElementById('toggleOppCost').checked;
+
+      const oppWrapper = document.getElementById('oppCostInputWrapper');
+      if (includeOppCost) {
+        oppWrapper.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        oppWrapper.classList.add('opacity-40', 'pointer-events-none');
+      }
+
+      const netTariff = parseFloat(document.getElementById('netTariff').value) || 0;
+      const cngPrice = parseFloat(document.getElementById('cngPrice').value) || 0;
+      const cngMileage = parseFloat(document.getElementById('cngMileage').value) || 1;
+
+      // Fuel Rate
+      const cngPerKm = cngMileage > 0 ? (cngPrice / cngMileage) : 0;
+      document.getElementById('lblCngPerKm').innerText = '₹' + cngPerKm.toFixed(2) + ' / km';
+
+      // Total Maintenance Rate
+      let maintKm = overrideMaintPerKm;
+      if (maintKm === undefined) {
+        const interval = parseFloat(document.getElementById('serviceInterval').value) || 10000;
+        const serviceCost = parseFloat(document.getElementById('serviceCost').value) || 7000;
+        const routineRate = interval > 0 ? (serviceCost / interval) : 0.70;
+        let wearRate = 0;
+        wearItems.forEach(item => {
+          if (item.triggerType === 'km' && item.triggerVal > 0) wearRate += (item.cost / item.triggerVal);
+          else if (item.triggerType === 'months' && item.triggerVal > 0) wearRate += (item.cost / (item.triggerVal * 2500));
+        });
+        maintKm = routineRate + wearRate;
+      }
+
+      const fixedAnnualOps = getTotalAnnualFixedOps();
+      document.getElementById('lblTotalFixedOps').innerText = fmtINR(fixedAnnualOps) + ' / yr';
+
+      // Financing Calculations
+      const downpayment = carCost * downPct;
+      const loanAmount = carCost - downpayment;
+      document.getElementById('lblDownAmount').innerText = fmtINR(downpayment);
+
+      const r = interestRate / 12;
+      let emi = 0;
+      if (r > 0 && loanMonths > 0) {
+        emi = loanAmount * r * Math.pow(1 + r, loanMonths) / (Math.pow(1 + r, loanMonths) - 1);
+      } else if (loanMonths > 0) {
+        emi = loanAmount / loanMonths;
+      }
+
+      const monthlyFdOppCost = includeOppCost ? ((downpayment * fdRate) / 12) : 0;
+      const monthlyOpsFixed = fixedAnnualOps / 12;
+      const totalMonthlyFixedCostYrs1_5 = emi + monthlyFdOppCost + monthlyOpsFixed;
+
+      // Variable Costs per KM
+      const totalVarKm = cngPerKm + maintKm;
+      const netMarginKm = netTariff - totalVarKm;
+
+      // Breakeven Daily Run
+      const dailyFixedCost = totalMonthlyFixedCostYrs1_5 / 25;
+      const breakevenDailyKm = netMarginKm > 0 ? (dailyFixedCost / netMarginKm) : 0;
+      const roundedBreakevenKm = Math.ceil(breakevenDailyKm);
+
+      // Render KPIs
+      document.getElementById('kpiEmi').innerText = fmtINR(emi);
+      document.getElementById('kpiVarKm').innerText = '₹' + totalVarKm.toFixed(2);
+      document.getElementById('kpiFixedMonthly').innerText = fmtINR(totalMonthlyFixedCostYrs1_5);
+      document.getElementById('kpiBreakeven').innerText = roundedBreakevenKm + ' km/day';
+
+      // Daily Matrix Render
+      const scenarios = [50, roundedBreakevenKm, 100, 150, 200, 250];
+      const uniqueScenarios = [...new Set(scenarios)].sort((a,b) => a - b);
+
+      const tbodyScenario = document.getElementById('scenarioTable');
+      tbodyScenario.innerHTML = '';
+
+      uniqueScenarios.forEach(dailyKm => {
+        const monthlyKm = dailyKm * 25;
+        const monthlyRevenue = monthlyKm * netTariff;
+        const monthlyVarCost = monthlyKm * totalVarKm;
+        const netMonthlyProfit = monthlyRevenue - monthlyVarCost - totalMonthlyFixedCostYrs1_5;
+
+        const isExactBreakeven = (dailyKm === roundedBreakevenKm);
+        const row = document.createElement('tr');
+        
+        let bgClass = 'hover:bg-slate-50 dark:hover:bg-gray-800/40 transition';
+        if (isExactBreakeven) {
+          bgClass = 'bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 text-sky-900 dark:text-sky-200 border-l-2 border-sky-500';
+        }
+
+        row.className = bgClass;
+        row.innerHTML = `
+          <td class="py-3 px-4 font-bold flex items-center gap-2">
+            ${dailyKm} km/day
+            ${isExactBreakeven ? '<span class="bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-sky-500/30">Exact Breakeven</span>' : ''}
+          </td>
+          <td class="py-3 px-4 text-right">${monthlyKm.toLocaleString('en-IN')} km</td>
+          <td class="py-3 px-4 text-right">${fmtINR(monthlyRevenue)}</td>
+          <td class="py-3 px-4 text-right">${fmtINR(monthlyVarCost)}</td>
+          <td class="py-3 px-4 text-right">${fmtINR(totalMonthlyFixedCostYrs1_5)}</td>
+          <td class="py-3 px-4 text-right font-bold ${netMonthlyProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+            ${netMonthlyProfit >= 0 ? '+' : ''}${fmtINR(netMonthlyProfit)}
+          </td>
+        `;
+        tbodyScenario.appendChild(row);
+      });
+
+      // 6-Year Projection Render
+      const customDailyRun = parseInt(document.getElementById('customDailySlider').value) || 100;
+      document.getElementById('sliderValLabel').innerText = customDailyRun + ' km/day';
+
+      const annualKm = customDailyRun * 25 * 12;
+      const annualRev = annualKm * netTariff;
+      const annualVarCost = annualKm * totalVarKm;
+      const annualOpsOppCost = fixedAnnualOps + (monthlyFdOppCost * 12);
+      const annualEmiYr1_5 = emi * 12;
+
+      const yr1_5AnnualProfit = annualRev - annualVarCost - annualEmiYr1_5 - annualOpsOppCost;
+      const yr6AnnualProfit = annualRev - annualVarCost - 0 - annualOpsOppCost;
+      const total6YrProfit = (yr1_5AnnualProfit * 5) + yr6AnnualProfit;
+
+      document.getElementById('lblYr1_5Profit').innerText = (yr1_5AnnualProfit >= 0 ? '+' : '') + fmtINR(yr1_5AnnualProfit);
+      document.getElementById('lblYr6Profit').innerText = (yr6AnnualProfit >= 0 ? '+' : '') + fmtINR(yr6AnnualProfit);
+      document.getElementById('lblTotal6YrProfit').innerText = (total6YrProfit >= 0 ? '+' : '') + fmtINR(total6YrProfit);
+
+      const tbodyYearly = document.getElementById('multiYearTable');
+      tbodyYearly.innerHTML = '';
+
+      for (let yr = 1; yr <= 6; yr++) {
+        const isYr6 = (yr === 6);
+        const currentEmiAnnual = isYr6 ? 0 : annualEmiYr1_5;
+        const currentProfit = isYr6 ? yr6AnnualProfit : yr1_5AnnualProfit;
+
+        const row = document.createElement('tr');
+        row.className = isYr6 ? 'bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 font-semibold' : 'hover:bg-slate-50 dark:hover:bg-gray-800/40';
+
+        row.innerHTML = `
+          <td class="py-3 px-4 font-bold ${isYr6 ? 'text-sky-600 dark:text-sky-400' : 'text-slate-700 dark:text-gray-300'}">
+            Year ${yr} ${isYr6 ? '<span class="text-[10px] bg-sky-400/20 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded ml-1">No EMI</span>' : ''}
+          </td>
+          <td class="py-3 px-4 text-right">${annualKm.toLocaleString('en-IN')} km</td>
+          <td class="py-3 px-4 text-right">${fmtINR(annualRev)}</td>
+          <td class="py-3 px-4 text-right">${fmtINR(annualVarCost)}</td>
+          <td class="py-3 px-4 text-right ${isYr6 ? 'text-slate-400 dark:text-gray-500' : ''}">${fmtINR(currentEmiAnnual)}</td>
+          <td class="py-3 px-4 text-right">${fmtINR(annualOpsOppCost)}</td>
+          <td class="py-3 px-4 text-right font-bold ${currentProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+            ${currentProfit >= 0 ? '+' : ''}${fmtINR(currentProfit)}
+          </td>
+        `;
+        tbodyYearly.appendChild(row);
+      }
+    }
+
+    // JSON Export Functionality
+    function exportJSON() {
+      const state = {
+        carCost: document.getElementById('carCost').value,
+        downPct: document.getElementById('downPct').value,
+        interestRate: document.getElementById('interestRate').value,
+        loanMonths: document.getElementById('loanMonths').value,
+        includeOppCost: document.getElementById('toggleOppCost').checked,
+        fdRate: document.getElementById('fdRate').value,
+
+        netTariff: document.getElementById('netTariff').value,
+        cngPrice: document.getElementById('cngPrice').value,
+        cngMileage: document.getElementById('cngMileage').value,
+
+        serviceInterval: document.getElementById('serviceInterval').value,
+        serviceCost: document.getElementById('serviceCost').value,
+
+        wearItems: wearItems,
+        fixedItems: fixedItems,
+        customDailySlider: document.getElementById('customDailySlider').value,
+        isDark: isDark
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "cab_model_config.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // JSON Import Functionality
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const state = JSON.parse(e.target.result);
+
+          if (state.carCost !== undefined) document.getElementById('carCost').value = state.carCost;
+          if (state.downPct !== undefined) document.getElementById('downPct').value = state.downPct;
+          if (state.interestRate !== undefined) document.getElementById('interestRate').value = state.interestRate;
+          if (state.loanMonths !== undefined) document.getElementById('loanMonths').value = state.loanMonths;
+          if (state.includeOppCost !== undefined) document.getElementById('toggleOppCost').checked = state.includeOppCost;
+          if (state.fdRate !== undefined) document.getElementById('fdRate').value = state.fdRate;
+
+          if (state.netTariff !== undefined) document.getElementById('netTariff').value = state.netTariff;
+          if (state.cngPrice !== undefined) document.getElementById('cngPrice').value = state.cngPrice;
+          if (state.cngMileage !== undefined) document.getElementById('cngMileage').value = state.cngMileage;
+
+          if (state.serviceInterval !== undefined) document.getElementById('serviceInterval').value = state.serviceInterval;
+          if (state.serviceCost !== undefined) document.getElementById('serviceCost').value = state.serviceCost;
+
+          if (Array.isArray(state.wearItems)) wearItems = state.wearItems;
+          if (Array.isArray(state.fixedItems)) fixedItems = state.fixedItems;
+
+          if (state.customDailySlider !== undefined) document.getElementById('customDailySlider').value = state.customDailySlider;
+          if (state.isDark !== undefined && state.isDark !== isDark) toggleTheme();
+
+          renderWearItems();
+          renderFixedItems();
+        } catch (err) {
+          alert('Error parsing JSON configuration file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Attach Input Event Listeners
+    document.querySelectorAll('input:not(#serviceInterval):not(#serviceCost)').forEach(input => {
+      input.addEventListener('input', () => calculateMaintenanceTotal());
+    });
+
+    window.onload = function() {
+      renderWearItems();
+      renderFixedItems();
+    };
+  </script>
+</body>
+</html>
