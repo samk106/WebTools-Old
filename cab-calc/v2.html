@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cab Economics Calculator</title>
-<!-- v2a: Summary tab (layout D card), share link / share image / copy / download -->
+<!-- v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -136,6 +136,7 @@
     width:420px;max-width:100%;aspect-ratio:9/16;background:var(--c-bg);color:var(--c-fg);border:1px solid var(--c-bd);border-radius:20px;padding:16px 22px 10px;display:flex;flex-direction:column;overflow:hidden;font-family:Inter,system-ui,sans-serif;text-align:left}
   .sc.dark{--c-bg:#0a0a0a;--c-fg:#fafafa;--c-mu:#a3a3a3;--c-bd:#262626;--c-soft:#1c1c1c;--c-pos:#34d399;--c-neg:#fb7185;--c-inv:#fafafa;--c-invfg:#0a0a0a}
   .sc,.sc *{box-sizing:border-box}
+  .sc{line-height:normal} /* stops Tailwind's base 1.5 line-height from making the card taller than 9:16 */
   .sc.ex{border:0;border-radius:0}
   .sc>*{flex-shrink:0}
   .sc .pos{color:var(--c-pos)} .sc .neg{color:var(--c-neg)}
@@ -551,11 +552,9 @@ function setView(v){
 
 
 /* ===== Summary card (v2): layout D, image-only share ===== */
-/* Watermark address comes from wherever the page is hosted (host + path, no protocol, query or #). Nothing is shown for a local file. */
-function siteAddr(){
-  if(!/^https?:$/.test(location.protocol))return '';
-  return (location.host+location.pathname).replace(/\/index\.html?$/i,'').replace(/\/+$/,'');
-}
+/* Watermark shows the domain it is hosted on plus a fixed display path. Nothing is shown when the file is opened locally. */
+const SHARE_PATH='/cab-economics';
+function siteAddr(){ return /^https?:$/.test(location.protocol)?location.host+SHARE_PATH:'' }
 const siteHTML=()=>{const a=siteAddr(); return a?`<span class="u"><b>${esc(a)}</b></span>`:''};
 const n0=n=>Math.round(n).toLocaleString('en-IN');
 function cardChart(m,hh){
