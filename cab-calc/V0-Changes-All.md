@@ -5,6 +5,7 @@
 - AI Used - Claude
 #### Changes List
 - Add a summary card with share options
+- Added social share links too
 
 ---
 
