@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://YOUR-DOMAIN/path/cab-economics-preview.png">
 <meta property="og:url" content="https://YOUR-DOMAIN/cab-economics">
 -->
-<!-- v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
+<!-- v2h: markdown heading renamed. v2g: renamed Trip Calc section titles and card headline. v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -417,11 +417,11 @@
     </div>
   </div>
   <div class="tp-panel" data-tp="tx">
-    <div class="tp-head"><h2>Quick Summary Text</h2><span class="tp-st" id="tpCpMsg" role="status"></span><button class="btn" id="tpCpTxt" type="button" aria-label="Copy card text"></button><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <div class="tp-head"><h2>Quick Summary</h2><span class="tp-st" id="tpCpMsg" role="status"></span><button class="btn" id="tpCpTxt" type="button" aria-label="Copy card text"></button><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="tp-body"><textarea id="tpMd" readonly aria-label="Card data as markdown" placeholder="Fill in earned, km and mileage to see the card data here as simple markdown."></textarea></div>
   </div>
   <div class="tp-panel" data-tp="cd">
-    <div class="tp-head"><h2>Quick Summary Card</h2><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <div class="tp-head"><h2>Quick Summary</h2><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="tp-body">
       <div class="tp-cardbox" id="tpCardBox"><div id="tpCardWrap"><div id="tpCard" class="sc tr"></div></div></div>
       <div id="tpMsg" class="text-xs mu text-center" role="status" style="min-height:18px;margin-top:10px"></div>
@@ -843,7 +843,7 @@ const T_ICON_COPY='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" s
 const T_ICON_OK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
 function tpCardHTML(dk){
   const c=tpCalc(), profit=c.net>=0;
-  if(!c.ready) return `<div class="ch"><div class="lg">🚕</div><div class="t"><b>Quick Summary Card</b><span>Waiting for your numbers</span></div></div>
+  if(!c.ready) return `<div class="ch"><div class="lg">🚕</div><div class="t"><b>Summary Trip/Day</b><span>Waiting for your numbers</span></div></div>
     <div class="verdict" style="margin-top:120px"><div class="big" style="font-size:22px">Enter earned, km and mileage</div><p>The summary appears here as soon as those three are filled in.</p></div>
     <div class="wm"><span>Made with <b>Cab Economics</b></span>${siteHTML()}</div>`;
   const costs=[['Fuel',c.fuel,dk?'#fafafa':'#0a0a0a'],['Maintenance',c.mt,dk?'#737373':'#a3a3a3']]; if(c.ot>0)costs.push(['Other',c.ot,dk?'#404040':'#d4d4d4']);
@@ -852,7 +852,7 @@ function tpCardHTML(dk){
   const mark=c.net<0?`<u style="position:absolute;left:${c.e/tot*100}%;top:0;bottom:0;width:2px;background:var(--c-neg);box-shadow:0 0 0 1.5px var(--c-bg);text-decoration:none"></u>`:'';
   const note=c.net<0?`<div class="k" style="margin-top:3px"><span class="neg">▎</span> Red line = what was earned. Costs went past it.</div>`:'';
   const tm=c.h?`${+c.h.toFixed(2)} hrs`:'—';
-  return `<div class="ch"><div class="lg">🚕</div><div class="t"><b>Quick Summary Card</b><span>${Math.round(c.km*10)/10} km${c.h?' · '+tm:''}</span></div><span class="pillx ${profit?'p':'n'}">${profit?'▲ Profit':'▼ Loss'}</span></div>
+  return `<div class="ch"><div class="lg">🚕</div><div class="t"><b>Summary Trip/Day</b><span>${Math.round(c.km*10)/10} km${c.h?' · '+tm:''}</span></div><span class="pillx ${profit?'p':'n'}">${profit?'▲ Profit':'▼ Loss'}</span></div>
   <div class="verdict"><div class="big ${tcls(c.net)}">${tsg(c.net)}</div><p>net earning after fuel, maintenance and other costs</p></div>
   <div class="title">Where the money went</div>
   <div class="bar2">${bar}${mark}</div>${note}
@@ -880,7 +880,7 @@ function tpMarkdown(){
   const c=tpCalc(); if(!c.ready) return '';
   const hrs=c.h?+c.h.toFixed(2)+' hrs':'-';
   return [
-    '## Quick cab summary',
+    '## Quick Summary Trip/Day',
     `**Net earning: ${tsg(c.net)}** (${c.net>=0?'profit':'loss'})`,
     '',
     '### Summary',
