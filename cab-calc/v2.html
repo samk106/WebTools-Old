@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://YOUR-DOMAIN/path/cab-economics-preview.png">
 <meta property="og:url" content="https://YOUR-DOMAIN/cab-economics">
 -->
-<!-- v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
+<!-- v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -116,10 +116,12 @@
   section.closed{padding-top:14px;padding-bottom:14px}
   section.closed .sec-head h2{margin-bottom:0}
   .sec-head{cursor:pointer}
-  .sec-chev{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:4px;color:var(--mu);font-size:12px;vertical-align:middle;transition:transform .15s;cursor:pointer;border-radius:6px}
+  .sec-head{display:flex;align-items:center;gap:12px}
+  .sec-main{flex:1;min-width:0}
+  .sec-chev{display:inline-grid;place-items:center;width:32px;height:32px;flex:none;border:1px solid var(--bd);border-radius:999px;background:var(--card);color:var(--fg);cursor:pointer}
   .sec-chev:hover{background:var(--soft)}
-  section.closed .sec-chev{transform:rotate(-90deg)}
-  .sec-sum{display:none;font-weight:500;color:var(--mu);font-size:12px;margin:2px 0 0 26px;white-space:normal}
+  .sec-chev svg{transition:transform .15s} section.closed .sec-chev svg{transform:rotate(-90deg)}
+  .sec-sum{display:none;font-weight:500;color:var(--mu);font-size:12px;margin:2px 0 0 0;white-space:normal}
   section.closed .sec-sum{display:block}
   .lbl{display:block;color:var(--mu)}
   .help{position:relative;display:inline-flex;vertical-align:middle;margin-left:6px}
@@ -399,7 +401,7 @@
 <!-- TRIP CALC VIEW (v2d) -->
 <main id="viewTrip" class="hide max-w-7xl mx-auto px-4 lg:px-8 pt-5">
  <div class="tp-wrap">
-  <section class="tp-panel" data-tp="in">
+  <div class="tp-panel" data-tp="in">
     <div class="tp-head"><h2>Enter Trip/Day Data</h2><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="tp-body">
     <p class="tp-sub">Enter the totals for the period you want to check.</p>
@@ -413,19 +415,19 @@
     <p class="tp-hint">Maintenance is your set-aside rate in ₹ per km. Other expenses is the total ₹ for the period, such as a daily pass, state tax or tolls. Both are included in the per km costs.</p>
     <button class="btn tp-clear" id="tpClear" type="button">Clear all</button>
     </div>
-  </section>
-  <section class="tp-panel" data-tp="tx">
+  </div>
+  <div class="tp-panel" data-tp="tx">
     <div class="tp-head"><h2>Quick Summary Text</h2><span class="tp-st" id="tpCpMsg" role="status"></span><button class="btn" id="tpCpTxt" type="button" aria-label="Copy card text"></button><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="tp-body"><textarea id="tpMd" readonly aria-label="Card data as markdown" placeholder="Fill in earned, km and mileage to see the card data here as simple markdown."></textarea></div>
-  </section>
-  <section class="tp-panel" data-tp="cd">
+  </div>
+  <div class="tp-panel" data-tp="cd">
     <div class="tp-head"><h2>Quick Summary Card</h2><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="tp-body">
       <div class="tp-cardbox" id="tpCardBox"><div id="tpCardWrap"><div id="tpCard" class="sc tr"></div></div></div>
       <div id="tpMsg" class="text-xs mu text-center" role="status" style="min-height:18px;margin-top:10px"></div>
       <p class="text-[11px] mu text-center" style="margin:4px 0 0">The image is saved at 1080 × 1920 px for stories and status.</p>
     </div>
-  </section>
+  </div>
  </div>
 </main>
 
@@ -640,8 +642,14 @@ document.addEventListener('click',e=>{if(!e.composedPath().some(n=>n.id==='setWr
 function toggleAll(){const close=anyOpen(); viewSecs().forEach(x=>setSec(x,!close)); save()}
 function initSections(){
   document.querySelectorAll('section[data-sec]').forEach(sec=>{
-    const head=sec.querySelector('.sec-head'), h2=head.querySelector('h2'), b=document.createElement('button');
-    b.type='button'; b.className='sec-chev'; b.textContent='▾'; b.setAttribute('aria-label','Collapse or expand section'); h2.prepend(b);
+    const head=sec.querySelector('.sec-head'), b=document.createElement('button');
+    /* keep the heading's own layout inside a wrapper so the round chevron can sit at the right end */
+    const keep=[], move=[]; head.className.split(/\s+/).forEach(c=>(/^(sec-head|mb-\d+)$/.test(c)?keep:move).push(c));
+    const w=document.createElement('div'); w.className=('sec-main '+move.join(' ')).trim();
+    while(head.firstChild)w.appendChild(head.firstChild);
+    head.className=keep.join(' '); head.appendChild(w);
+    b.type='button'; b.className='sec-chev'; b.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    b.setAttribute('aria-label','Collapse or expand section'); head.appendChild(b);
     head.addEventListener('click',e=>{ if(e.target.closest('button:not(.sec-chev),input,select,a,.seg'))return; setSec(sec,sec.classList.contains('closed')); save(); });
     setSec(sec,secOpen[sec.dataset.sec]!==false);
   });
