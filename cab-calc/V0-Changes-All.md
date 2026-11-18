@@ -1,5 +1,15 @@
 
 
+
+# v2 a,b,c
+- Date - 18 Nov 26
+- AI Used - Claude
+#### Changes List
+- Updated the title labesl
+- Added quick guide button at top
+
+---
+
 # v2 a,b,c
 - Date - 16 Nov 26
 - AI Used - Claude
