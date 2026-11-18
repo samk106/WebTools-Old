@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://YOUR-DOMAIN/path/cab-economics-preview.png">
 <meta property="og:url" content="https://YOUR-DOMAIN/cab-economics">
 -->
-<!-- v2k: Trip Calc Copy button is icon-only with hover tooltip. v2j: Guide button is icon-only with a hover tooltip. v2i: numbered titles (1.), Guide panel + first-visit note, source URL in Trip Calc text. v2h: markdown heading renamed. v2g: renamed Trip Calc section titles and card headline. v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
+<!-- v2l: Trip Calc fuel unit dropdown, renamed text lines and per-km rows. v2k: Trip Calc Copy button is icon-only with hover tooltip. v2j: Guide button is icon-only with a hover tooltip. v2i: numbered titles (1.), Guide panel + first-visit note, source URL in Trip Calc text. v2h: markdown heading renamed. v2g: renamed Trip Calc section titles and card headline. v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -213,6 +213,7 @@
   .tp-fld{position:relative;width:112px;flex:none}
   .tp-fld span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;pointer-events:none}
   .tp-inp{width:100%;text-align:right;font-weight:600;font-size:13px;padding:7px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);outline:none}
+  select.tp-inp{text-align-last:right;padding-right:6px;cursor:pointer}
   .tp-inp:focus{border-color:var(--fg)} .tp-fld.rs .tp-inp{padding-left:24px}
   .tp-hint{margin:10px 0 14px;font-size:11px;color:var(--mu)}
   .tp-clear{margin-top:auto;width:100%;justify-content:center}
@@ -429,8 +430,9 @@
     <div class="tp-row"><label for="tp_earned">Total earned</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_earned" inputmode="decimal" placeholder="2,500"></div></div>
     <div class="tp-row"><label for="tp_km">Distance ridden (km)</label><div class="tp-fld"><input class="tp-inp" id="tp_km" inputmode="decimal" placeholder="150"></div></div>
     <div class="tp-row"><label for="tp_hrs">Time spent (hours)</label><div class="tp-fld"><input class="tp-inp" id="tp_hrs" inputmode="decimal" placeholder="9"></div></div>
-    <div class="tp-row"><label for="tp_price">Fuel price (per litre/kg)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_price" inputmode="decimal" placeholder="95"></div></div>
-    <div class="tp-row"><label for="tp_mil">Mileage (km per litre/kg)</label><div class="tp-fld"><input class="tp-inp" id="tp_mil" inputmode="decimal" placeholder="18"></div></div>
+    <div class="tp-row"><label for="tp_unit">Fuel measured in</label><div class="tp-fld"><select class="tp-inp" id="tp_unit"><option value="litre">Litre</option><option value="kg">kg</option></select></div></div>
+    <div class="tp-row"><label for="tp_price">Fuel price (per litre)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_price" inputmode="decimal" placeholder="95"></div></div>
+    <div class="tp-row"><label for="tp_mil">Mileage (km per litre)</label><div class="tp-fld"><input class="tp-inp" id="tp_mil" inputmode="decimal" placeholder="18"></div></div>
     <div class="tp-row"><label for="tp_maint">Maintenance (per km)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_maint" inputmode="decimal" placeholder="1.50"></div></div>
     <div class="tp-row"><label for="tp_other">Other expenses (total)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_other" inputmode="decimal" placeholder="150"></div></div>
     <p class="tp-hint">Maintenance is your set-aside rate in ₹ per km. Other expenses is the total ₹ for the period, such as a daily pass, state tax or tolls. Both are included in the per km costs.</p>
@@ -900,8 +902,8 @@ const tinr=n=>(n<0?'−':'')+'₹'+Math.round(Math.abs(n)).toLocaleString('en-IN
 const tinr2=n=>(n<0?'−':'')+'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 const tsg=n=>(n>=0?'+':'')+tinr(n), tcls=n=>n>=0?'pos':'neg';
 const tnum=v=>{const n=parseFloat(String(v).replace(/,/g,''));return isFinite(n)&&n>0?n:0};
-let TS={earned:'',km:'',price:'',mil:'',hrs:'',maint:'',other:''}, tpTheme='light';
-try{const r=JSON.parse(localStorage.getItem(TKEY)); if(r){TF.forEach(k=>{if(typeof r[k]==='string')TS[k]=r[k]}); if(r.theme==='dark')tpTheme='dark'}}catch(e){}
+let TS={earned:'',km:'',price:'',mil:'',hrs:'',maint:'',other:'',unit:'litre'}, tpTheme='light';
+try{const r=JSON.parse(localStorage.getItem(TKEY)); if(r){TF.forEach(k=>{if(typeof r[k]==='string')TS[k]=r[k]}); if(r.theme==='dark')tpTheme='dark'; if(r.unit==='kg')TS.unit='kg'}}catch(e){}
 const tpSave=()=>{try{localStorage.setItem(TKEY,JSON.stringify(Object.assign({theme:tpTheme},TS)))}catch(e){}};
 function tpCalc(){
   const e=tnum(TS.earned), km=tnum(TS.km), p=tnum(TS.price), mil=tnum(TS.mil), h=tnum(TS.hrs), mk=tnum(TS.maint), mt=mk*km, ot=tnum(TS.other);
@@ -929,18 +931,18 @@ function tpCardHTML(dk){
   <div class="bar2">${bar}${mark}</div>${note}
   <div class="leg">${costs.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<b>${tinr(x[1])}</b></div>`).join('')}${c.net>0?`<div><i style="background:var(--c-pos)"></i>Left for you<b class="pos">${tinr(c.net)}</b></div>`:''}</div>
   <div class="ledger"><div class="lr"><span>Earned</span><b>${tinr(c.e)}</b></div><div class="lr"><span>Net earning</span><b class="${profit?'g':'r'}">${tsg(c.net)}</b></div></div>
-  <div class="g3"><div class="tile"><div class="k">Fuel used</div><span class="v">${+c.litres.toFixed(2)} litre/kg</span></div><div class="tile"><div class="k">Net per km</div><span class="v ${tcls(c.netKm)}">${tinr2(c.netKm)}</span></div><div class="tile"><div class="k">Net per hour</div><span class="v ${c.h?tcls(c.netHr):''}">${c.h?tinr(c.netHr):'—'}</span></div></div>
+  <div class="g3"><div class="tile"><div class="k">Fuel used</div><span class="v">${+c.litres.toFixed(2)} ${TS.unit}</span></div><div class="tile"><div class="k">Net per km</div><span class="v ${tcls(c.netKm)}">${tinr2(c.netKm)}</span></div><div class="tile"><div class="k">Net per hour</div><span class="v ${c.h?tcls(c.netHr):''}">${c.h?tinr(c.netHr):'—'}</span></div></div>
   <div class="cols"><div class="col"><span class="lab">Cost per km</span>
-    <div class="it"><div class="k">Fuel</div><span class="v">${tinr2(c.fuelKm)}</span></div>
-    <div class="it"><div class="k">Maintenance</div><span class="v">${tinr2(c.maintKm)}</span></div>
-    <div class="it"><div class="k">Other expenses</div><span class="v">${tinr2(c.otherKm)}</span></div>
-    <div class="it"><div class="k">Total cost</div><span class="v">${tinr2(c.fuelKm+c.maintKm+c.otherKm)}</span></div>
-    <div class="it"><div class="k">Earned</div><span class="v">${tinr2(c.earnKm)}</span></div>
-    <div class="it"><div class="k">Net profit</div><span class="v ${tcls(c.netKm)}">${tinr2(c.netKm)}</span></div></div>
+    <div class="it"><div class="k">Earnings per km</div><span class="v">${tinr2(c.earnKm)}</span></div>
+    <div class="it"><div class="k">Fuel per km</div><span class="v">${tinr2(c.fuelKm)}</span></div>
+    <div class="it"><div class="k">Maintenance per km</div><span class="v">${tinr2(c.maintKm)}</span></div>
+    <div class="it"><div class="k">Other expenses per km</div><span class="v">${tinr2(c.otherKm)}</span></div>
+    <div class="it"><div class="k">Total Cost per km</div><span class="v">${tinr2(c.fuelKm+c.maintKm+c.otherKm)}</span></div>
+    <div class="it"><div class="k">Net Profit per km</div><span class="v ${tcls(c.netKm)}">${tinr2(c.netKm)}</span></div></div>
   <div class="col"><span class="lab">Your inputs</span>
     <div class="it"><div class="k">Distance</div><span class="v">${Math.round(c.km*10)/10} km</span></div>
-    <div class="it"><div class="k">Fuel price</div><span class="v">${tinr2(c.p)} per litre/kg</span></div>
-    <div class="it"><div class="k">Mileage</div><span class="v">${c.mil} km per litre/kg</span></div>
+    <div class="it"><div class="k">Fuel price</div><span class="v">${tinr2(c.p)} per ${TS.unit}</span></div>
+    <div class="it"><div class="k">Mileage</div><span class="v">${c.mil} km per ${TS.unit}</span></div>
     <div class="it"><div class="k">Time spent</div><span class="v">${tm}</span></div>
     <div class="it"><div class="k">Maintenance total</div><span class="v">${tinr(c.mt)}</span></div>
     <div class="it"><div class="k">Other expenses</div><span class="v">${tinr(c.ot)}</span></div></div></div>
@@ -952,29 +954,29 @@ function tpMarkdown(){
   const hrs=c.h?+c.h.toFixed(2)+' hrs':'-';
   return [
     '## Quick Summary Trip/Day',
-    `**Net earning: ${tsg(c.net)}** (${c.net>=0?'profit':'loss'})`,
+    `**Net Profit: ${tsg(c.net)}** (${c.net>=0?'profit':'loss'})`,
     '',
     '### Summary',
-    `- Earned: ${tinr(c.e)}`,
+    `- Total Earnings: ${tinr(c.e)}`,
     `- Fuel cost: ${tinr(c.fuel)}`,
     `- Maintenance: ${tinr(c.mt)}`,
     `- Other expenses: ${tinr(c.ot)}`,
     `- Net earning: ${tsg(c.net)}`,
-    `- Fuel used: ${+c.litres.toFixed(2)} litre/kg`,
+    `- Fuel used: ${+c.litres.toFixed(2)} ${TS.unit}`,
     `- Net per hour: ${c.h?tinr(c.netHr):'-'}`,
     '',
     '### Per km',
-    `- Earned: ${tinr2(c.earnKm)}`,
-    `- Fuel cost: ${tinr2(c.fuelKm)}`,
-    `- Maintenance cost: ${tinr2(c.maintKm)}`,
-    `- Other expenses: ${tinr2(c.otherKm)}`,
-    `- Total cost: ${tinr2(c.fuelKm+c.maintKm+c.otherKm)}`,
-    `- Net profit: ${tinr2(c.netKm)}`,
+    `- Earnings per km: ${tinr2(c.earnKm)}`,
+    `- Fuel cost per km: ${tinr2(c.fuelKm)}`,
+    `- Maintenance cost per km: ${tinr2(c.maintKm)}`,
+    `- Other expenses per km: ${tinr2(c.otherKm)}`,
+    `- Total cost per km: ${tinr2(c.fuelKm+c.maintKm+c.otherKm)}`,
+    `- Net profit per km: ${tinr2(c.netKm)}`,
     '',
     '### Inputs',
     `- Distance: ${Math.round(c.km*10)/10} km`,
-    `- Fuel price: ${tinr2(c.p)} per litre/kg`,
-    `- Mileage: ${c.mil} km per litre/kg`,
+    `- Fuel price: ${tinr2(c.p)} per ${TS.unit}`,
+    `- Mileage: ${c.mil} km per ${TS.unit}`,
     `- Time spent: ${hrs}`,
     `- Maintenance rate: ${tinr2(c.maintKm)}/km`,
     `- Other expenses (total): ${tinr(c.ot)}`,
@@ -998,6 +1000,12 @@ document.querySelectorAll('#viewTrip .tp-panel').forEach(p=>{
   set(TO[id]!==false); b.onclick=()=>{set(p.classList.contains('closed')); tpRender()};
 });
 TF.forEach(k=>{const el=$('tp_'+k); el.value=TS[k]; el.addEventListener('input',()=>{TS[k]=el.value; tpSave(); tpRender()})});
+function tpUnitLabels(){
+  document.querySelector('label[for=tp_price]').textContent='Fuel price (per '+TS.unit+')';
+  document.querySelector('label[for=tp_mil]').textContent='Mileage (km per '+TS.unit+')';
+}
+$('tp_unit').value=TS.unit; tpUnitLabels();
+$('tp_unit').addEventListener('change',()=>{TS.unit=$('tp_unit').value==='kg'?'kg':'litre'; tpUnitLabels(); tpSave(); tpRender()});
 $('tpCtL').onclick=()=>{tpTheme='light'; tpSave(); tpRender()};
 $('tpCtD').onclick=()=>{tpTheme='dark'; tpSave(); tpRender()};
 addEventListener('resize',()=>{if(view==='trip')tpRender()});
