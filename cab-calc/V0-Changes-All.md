@@ -1,11 +1,19 @@
 
 
+# v3
+- Date - 19 Nov 26
+- AI Used - Claude
+#### Changes List
+- Updated the summary card design, shifted terms and removed the table for uncompacted view
+- Added text to calculator page titles, on collapse and open state
 
-# v2 a,b,c
+---
+
+# v3
 - Date - 18 Nov 26
 - AI Used - Claude
 #### Changes List
-- Updated the title labesl
+- Updated the title labels
 - Added quick guide button at top
 
 ---
