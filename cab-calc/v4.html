@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cab Economics Calculator</title>
+<meta name="description" content="Work out breakeven, profit and loan payback for your cab or any vehicle. Compare vehicles and share a summary card.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cab Economics Calculator">
+<meta property="og:description" content="Work out breakeven, profit and loan payback for your cab or any vehicle.">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Add once your preview image is hosted (absolute address, ideally 1200x630):
+<meta property="og:image" content="https://YOUR-DOMAIN/path/cab-economics-preview.png">
+<meta property="og:url" content="https://YOUR-DOMAIN/cab-economics">
+-->
+<!-- v2o: Calculator sections show a description when open and a live data line when collapsed (Plain text 2, under the title). v2n: Summary card Option A (EMI / overheads per km), no chart, shorter labels. v2m: Summary card columns rearranged; Trip Calc text/card tweaks. v2l: Trip Calc fuel unit dropdown, renamed text lines and per-km rows. v2k: Trip Calc Copy button is icon-only with hover tooltip. v2j: Guide button is icon-only with a hover tooltip. v2i: numbered titles (1.), Guide panel + first-visit note, source URL in Trip Calc text. v2h: markdown heading renamed. v2g: renamed Trip Calc section titles and card headline. v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#fafafa;--card:#fff;--bd:#e5e5e5;--fg:#0a0a0a;--mu:#737373;--soft:#f5f5f5;--pos:#059669;--neg:#e11d48;--inv:#0a0a0a;--invfg:#fff}
+  :root[data-theme="dark"]{--bg:#0a0a0a;--card:#141414;--bd:#262626;--fg:#fafafa;--mu:#a3a3a3;--soft:#1c1c1c;--pos:#34d399;--neg:#fb7185;--inv:#fafafa;--invfg:#0a0a0a}
+  body{font-family:Inter,sans-serif;background:var(--bg);color:var(--fg)}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:16px}
+  .mu{color:var(--mu)} .soft{background:var(--soft)} .bd{border-color:var(--bd)}
+  .pos{color:var(--pos)} .neg{color:var(--neg)}
+  .pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--bd)}
+  .pill.inv{background:var(--inv);color:var(--invfg);border-color:var(--inv)}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px}
+  .row label{color:var(--mu)}
+  .inp{width:112px;text-align:right;font-weight:600;font-size:13px;padding:6px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);outline:none}
+  .inp:focus{border-color:var(--fg)}
+  .h{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+  .btn{font-size:12px;font-weight:600;padding:6px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);cursor:pointer}
+  .btn:hover{background:var(--soft)} .btn{white-space:nowrap}
+  .btn.icon{width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:999px}
+  .chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--bd);background:var(--card);cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--inv);color:var(--invfg);border-color:var(--inv)}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .seg{display:inline-flex;padding:3px;border-radius:12px;background:var(--soft);border:1px solid var(--bd)}
+  .seg button{font-size:12px;font-weight:600;padding:6px 16px;border-radius:9px;cursor:pointer;color:var(--mu)}
+  .seg button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  details>summary{list-style:none;cursor:pointer} details>summary::-webkit-details-marker{display:none}
+  details[open] .chev{transform:rotate(180deg)} .chev{transition:transform .2s}
+  table{width:100%;font-size:12px;border-collapse:collapse} th{font-weight:600;color:var(--mu);text-align:right;padding:10px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+  td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap} th:first-child,td:first-child{text-align:left}
+  tr.hl td{background:var(--soft);font-weight:700}
+  tr.tot td{border-top:2px solid var(--fg);font-weight:800}
+  td:first-child,th:first-child{position:sticky;left:0;z-index:1;background:var(--card)}
+  tr.hl td:first-child{background:var(--soft)}
+  tr.grp td:first-child{position:static}
+  .gt{position:sticky;left:12px}
+  @media(max-width:640px){
+    td,th{padding:8px 8px;font-size:11.5px}
+    td:first-child,th:first-child{white-space:normal;min-width:84px;max-width:118px}
+    tr.grp td{padding:8px 12px}
+  }
+  tr.grp td{background:var(--soft);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:8px 12px;text-align:left}
+  td.best{background:color-mix(in srgb,var(--pos) 14%,transparent);font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--fg)}
+  input[type=checkbox]{accent-color:var(--fg)}
+  .hide{display:none!important}
+  .dd{position:relative}
+  .vsel{display:flex;align-items:stretch;border:1px solid var(--bd);border-radius:12px;background:var(--card);overflow:hidden}
+  .vsel.open{border-color:var(--fg)}
+  .vsel .sw{border:0;border-left:1px solid var(--bd);border-right:1px solid var(--bd);border-radius:0;flex:1;min-width:0;width:auto}
+  .vsel .sw[aria-expanded="true"]{border-color:var(--bd)}
+  .va{flex:none;width:40px;border:0;background:none;color:var(--fg);font:inherit;font-size:20px;line-height:1;cursor:pointer}
+  .va:hover:not(:disabled){background:var(--soft)} .va:disabled{opacity:.3;cursor:default}
+  .wr{background:var(--soft);border-radius:12px;padding:10px;font-size:12px}
+  .wr1{display:flex;align-items:center;gap:4px}
+  .wr2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+  .wnm{flex:1;min-width:0;text-align:left!important}
+  .inp.wn{width:5.5rem;padding-left:8px;padding-right:8px}
+  .wbt{display:flex;align-items:center;flex:none}
+  .wsub{margin-left:auto;color:var(--mu)}
+  #wearList,#fixedList{container-type:inline-size}
+  @container (min-width:760px){
+    .wr{display:flex;align-items:center;gap:12px;padding:12px 14px}
+    .wr1,.wr2{display:contents}
+    .wnm{min-width:170px}
+    .inp.wn{width:7rem}
+    .wsub{margin-left:0;min-width:5rem;text-align:right}
+    .wbt{order:10;margin-left:6px}
+  }
+  .menu.setmenu{left:auto;right:0;width:250px;max-width:calc(100vw - 24px);top:calc(100% + 8px)}
+  .tipb[aria-expanded="true"]::after{opacity:0!important}
+  .mi svg{flex:none;color:var(--mu)}
+  .dsk{display:none!important}
+  @media(min-width:640px){.dsk{display:inline-flex!important}}
+  .tipb{position:relative}
+  .tipb::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:0;padding:4px 9px;font-size:11px;font-weight:600;border-radius:8px;background:var(--inv);color:var(--invfg);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:60}
+  .tipb:hover::after,.tipb:focus-visible::after{opacity:1}
+  @media(hover:none){.tipb::after{display:none}}
+  .sw{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:inherit;font-size:14px;cursor:pointer;text-align:left}
+  .sw b{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sw .car{color:var(--mu);font-size:12px;transition:transform .15s}
+  .sw[aria-expanded="true"]{border-color:var(--fg)} .sw[aria-expanded="true"] .car{transform:rotate(180deg)}
+  .menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px;max-height:70vh;overflow:auto}
+  .menu[hidden]{display:none}
+  .mh{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:8px 10px 4px}
+  .mi{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:9px;background:none;color:var(--fg);font:inherit;font-size:13px;cursor:pointer;text-align:left}
+  .mi:hover:not(:disabled){background:var(--soft)} .mi:disabled{opacity:.35;cursor:default}
+  .sep{height:1px;background:var(--bd);margin:6px 4px}
+  .vr{display:flex;align-items:center;gap:4px;padding:2px 4px 2px 2px;border-radius:10px}
+  .vr:hover,.vr.on{background:var(--soft)}
+  .vpick{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 6px;border:0;background:none;color:var(--fg);font:inherit;font-size:13px;cursor:pointer;text-align:left;border-radius:8px}
+  .vr.on .vpick{font-weight:600}
+  .vpick .g{width:14px;flex:none;color:var(--pos);font-weight:700;text-align:center}
+  .vn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ib2{flex:none;width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:inherit;font-size:11px;cursor:pointer;display:grid;place-items:center;padding:0}
+  .ib2:hover:not(:disabled){border-color:var(--fg)} .ib2:disabled{opacity:.3;cursor:default}
+  .ib2.x{color:var(--neg)} .ib2.x:hover:not(:disabled){background:var(--neg);border-color:var(--neg);color:#fff}
+  section.closed > :not(.sec-head){display:none}
+  section.closed .sec-hide{display:none!important}
+  section.closed .sec-head{margin-bottom:0!important}
+  section.closed{padding-top:14px;padding-bottom:14px}
+  section.closed .sec-head h2{margin-bottom:0}
+  .sec-head{cursor:pointer}
+  .sec-head{display:flex;align-items:center;gap:12px}
+  .sec-main{flex:1;min-width:0}
+  .sec-chev{display:inline-grid;place-items:center;width:32px;height:32px;flex:none;border:1px solid var(--bd);border-radius:999px;background:var(--card);color:var(--fg);cursor:pointer}
+  .sec-chev:hover{background:var(--soft)}
+  .sec-chev svg{transition:transform .15s} section.closed .sec-chev svg{transform:rotate(-90deg)}
+  .sec-sum{display:none;font-weight:500;color:var(--mu);font-size:12px;margin:2px 0 0 0;white-space:normal}
+  section.closed .sec-sum{display:block}
+  .sec-desc{font-weight:500;color:var(--mu);font-size:12px;margin:2px 0 0 0;line-height:1.5;white-space:normal}
+  section.closed .sec-desc{display:none}
+  .lbl{display:block;color:var(--mu)}
+  .help{position:relative;display:inline-flex;vertical-align:middle;margin-left:6px}
+  .q{width:18px;height:18px;border-radius:50%;border:1px solid var(--bd);background:var(--soft);color:var(--mu);font:inherit;font-size:11px;font-weight:700;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+  .q:hover,.q:focus-visible{background:var(--inv);color:var(--invfg);border-color:var(--inv);outline:none}
+  .tip{position:absolute;left:-6px;top:calc(100% + 8px);z-index:30;width:270px;max-width:70vw;padding:10px 12px;border-radius:12px;background:var(--inv);color:var(--invfg);font-size:12px;line-height:1.45;font-weight:500;text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.18);opacity:0;visibility:hidden;transform:translateY(-3px);transition:opacity .15s,transform .15s,visibility .15s;pointer-events:none}
+  .tip::before{content:"";position:absolute;left:10px;top:-4px;width:8px;height:8px;background:var(--inv);transform:rotate(45deg)}
+  .help:hover .tip,.help:focus-within .tip{opacity:1;visibility:visible;transform:none}
+  .help.flip .tip{left:auto;right:-6px} .help.flip .tip::before{left:auto;right:10px}
+  @media(max-width:480px){.tip{width:225px}}
+
+  /* Desktop table fit: wider page on big screens, compact cells + slimmer panel on laptops */
+  @media(min-width:1420px){ .max-w-7xl{max-width:1480px!important} }
+  @media(min-width:1024px) and (max-width:1419px){
+    #viewCalc{grid-template-columns:minmax(0,1fr) 320px}
+    #viewCalc table th,#viewCalc table td{padding-left:7px;padding-right:7px}
+    #viewCalc table{font-size:11.5px}
+  }
+  #rTake,#rEcon,#rEmi,#rVar,#rPay,#rTotal{white-space:nowrap}
+
+  /* ===== Summary card (v2) — scoped under .sc so it never clashes with app styles ===== */
+  .sc{--c-bg:#fff;--c-fg:#0a0a0a;--c-mu:#737373;--c-bd:#e5e5e5;--c-soft:#f5f5f5;--c-pos:#059669;--c-neg:#e11d48;--c-inv:#0a0a0a;--c-invfg:#fff;
+    width:420px;max-width:100%;aspect-ratio:9/16;background:var(--c-bg);color:var(--c-fg);border:1px solid var(--c-bd);border-radius:20px;padding:16px 22px 10px;display:flex;flex-direction:column;overflow:hidden;font-family:Inter,system-ui,sans-serif;text-align:left}
+  .sc.dark{--c-bg:#0a0a0a;--c-fg:#fafafa;--c-mu:#a3a3a3;--c-bd:#262626;--c-soft:#1c1c1c;--c-pos:#34d399;--c-neg:#fb7185;--c-inv:#fafafa;--c-invfg:#0a0a0a}
+  .sc,.sc *{box-sizing:border-box}
+  .sc{line-height:normal} /* stops Tailwind's base 1.5 line-height from making the card taller than 9:16 */
+  .sc.ex{border:0;border-radius:0}
+  .sc>*{flex-shrink:0}
+  .sc .pos{color:var(--c-pos)} .sc .neg{color:var(--c-neg)}
+  .sc .ch{display:flex;align-items:center;gap:10px}
+  .sc .logo{width:30px;height:30px;border-radius:9px;background:var(--c-inv);color:var(--c-invfg);display:grid;place-items:center;font-size:15px;flex:none}
+  .sc .ch .t{min-width:0;flex:1}
+  .sc .ch .t b{display:block;font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sc .ch .t span{display:block;font-size:10.5px;color:var(--c-mu);margin-top:1px}
+  .sc .pillx{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 11px;border-radius:999px;white-space:nowrap}
+  .sc .pillx.p{color:var(--c-pos);background:color-mix(in srgb,var(--c-pos) 13%,transparent);border:1px solid color-mix(in srgb,var(--c-pos) 38%,transparent)}
+  .sc .pillx.n{color:var(--c-neg);background:color-mix(in srgb,var(--c-neg) 13%,transparent);border:1px solid color-mix(in srgb,var(--c-neg) 38%,transparent)}
+  .sc .verdict{margin-top:6px;text-align:center}
+  .sc .big{font-size:42px;font-weight:800;letter-spacing:-.04em;line-height:1.05}
+  .sc .verdict p{margin:2px 0 0;font-size:12px;color:var(--c-mu);line-height:1.4}
+  .sc .title{margin-top:8px;font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .sc .bar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--c-soft);margin-top:8px;position:relative}
+  .sc .bar i{display:block;height:100%}
+  .sc .k{font-size:10px;color:var(--c-mu);font-weight:500;line-height:1.25}
+  .sc .v{font-size:14px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .sc .lab{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-mu);display:block;margin-bottom:2px}
+  .sc .leg{margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+  .sc .leg div{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--c-mu)}
+  .sc .leg b{margin-left:auto;color:var(--c-fg);font-weight:700}
+  .sc .leg i{width:8px;height:8px;border-radius:2px;flex:none}
+  .sc .ledger{margin-top:9px;background:var(--c-inv);color:var(--c-invfg);border-radius:14px;padding:3px 14px}
+  .sc .ledger .lr{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
+  .sc .ledger .lr+.lr{border-top:1px solid color-mix(in srgb,var(--c-invfg) 28%,transparent)}
+  .sc .ledger .lr span{font-size:13px;opacity:.9} .sc .ledger .lr b{font-size:19px;font-weight:800;letter-spacing:-.02em}
+  .sc .ledger .g{color:#34d399} .sc .ledger .r{color:#fb7185} .sc.dark .ledger .g{color:#059669} .sc.dark .ledger .r{color:#e11d48}
+  .sc .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}
+  .sc .tile{background:var(--c-soft);border-radius:12px;padding:5px 9px}
+  .sc .tile .v{display:block;font-size:14px;margin-top:1px}
+  .sc .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .sc .col{border:1px solid var(--c-bd);border-radius:14px;padding:6px 12px}
+  .sc .it{padding:2px 0;border-top:1px solid var(--c-bd)} .sc .it:first-of-type{border-top:0}
+  .sc .it .v{display:block;font-size:13px}
+  .sc .chart{border:1px solid var(--c-bd);border-radius:12px;padding:4px 9px 1px;margin-top:10px;margin-bottom:8px}
+  .sc .chart svg{display:block;width:100%;height:auto}
+  .sc .wm{margin-top:auto;padding-top:6px;border-top:1px solid var(--c-bd);display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--c-mu)}
+  .sc .wm b{color:var(--c-fg);font-weight:700}
+  .nb{width:22px;height:22px;border-radius:50%;background:var(--soft);border:1px solid var(--bd);display:grid;place-items:center;font-size:9px;font-weight:700;flex:none}
+  .sc .wm span{white-space:nowrap} .sc .wm .u{min-width:0;overflow:hidden;text-overflow:ellipsis;margin-left:12px}
+
+  /* ===== Trip Calc tab (v2d) ===== */
+  .sc .lg{width:30px;height:30px;border-radius:9px;background:var(--c-inv);color:var(--c-invfg);display:grid;place-items:center;font-size:15px;flex:none}
+  .sc .bar2{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--c-soft);margin-top:8px;position:relative}
+  .sc .bar2 i{display:block;height:100%}
+  .sc.tr .verdict{margin-top:22px} .sc.tr .big{font-size:46px} .sc.tr .verdict p{margin:4px 0 0}
+  .sc.tr .title{margin-top:26px} .sc.tr .leg{margin-top:8px;gap:3px 14px}
+  .sc.tr .ledger{margin-top:18px} .sc.tr .ledger .lr{padding:9px 0} .sc.tr .ledger .lr b{font-size:20px}
+  .sc.tr .g3{margin-top:12px} .sc.tr .tile{padding:7px 9px} .sc.tr .cols{margin-top:16px} .sc.tr .col{padding:8px 12px} .sc.tr .it{padding:4px 0}
+  .tp-wrap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+  .tp-panel{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;min-width:0;display:flex;flex-direction:column}
+  .tp-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;min-height:40px}
+  .tp-head h2{margin:0;font-size:14px;font-weight:600;flex:1;min-width:0}
+  .tp-st{font-size:12px;color:var(--mu)}
+  .tp-tog{display:none;width:32px;height:32px;border:1px solid var(--bd);border-radius:999px;background:var(--card);color:var(--fg);cursor:pointer;place-items:center;flex:none}
+  .tp-tog svg{transition:transform .15s} .tp-panel.closed .tp-tog svg{transform:rotate(-90deg)}
+  .tp-body{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column}
+  .tp-sub{margin:0 0 10px;font-size:12px;color:var(--mu)}
+  .tp-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:7px 0}
+  .tp-row label{color:var(--mu);flex:1;min-width:0;line-height:1.3}
+  .tp-fld{position:relative;width:112px;flex:none}
+  .tp-fld span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:13px;pointer-events:none}
+  .tp-inp{width:100%;text-align:right;font-weight:600;font-size:13px;padding:7px 10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);outline:none}
+  select.tp-inp{text-align-last:right;padding-right:6px;cursor:pointer}
+  .tp-inp:focus{border-color:var(--fg)} .tp-fld.rs .tp-inp{padding-left:24px}
+  .tp-hint{margin:10px 0 14px;font-size:11px;color:var(--mu)}
+  .tp-clear{margin-top:auto;width:100%;justify-content:center}
+  .tp-cardbox{overflow:hidden;display:flex;justify-content:center}
+  #tpMd{display:block;width:100%;flex:1;min-height:240px;padding:12px 14px;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:12px;resize:none;outline:none}
+  .seg.self-start{max-width:100%;overflow-x:auto;scrollbar-width:none} .seg.self-start::-webkit-scrollbar{display:none}
+  @media(max-width:1099px){.tp-wrap{grid-template-columns:minmax(0,1fr);gap:12px}.tp-tog{display:inline-grid}.tp-panel.closed .tp-body{display:none}.tp-panel.closed .tp-head{margin-bottom:0}#tpMd{flex:none;height:300px}}
+  @media(max-width:480px){.seg button{padding:6px 10px}.tp-panel{padding:14px}}
+
+  /* ===== Guide ===== */
+  .g-back{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:60;opacity:0;pointer-events:none;transition:opacity .2s}
+  .g-back.on{opacity:1;pointer-events:auto}
+  .g-panel{position:fixed;z-index:61;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--card);color:var(--fg);border-left:1px solid var(--bd);display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(0,0,0,.18);transform:translateX(100%);visibility:hidden;transition:transform .2s,visibility 0s .2s}
+  .g-panel.on{transform:none;visibility:visible;transition:transform .2s}
+  .g-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--bd)}
+  .g-head h2{margin:0;font-size:16px;font-weight:700}
+  .g-body{overflow-y:auto;padding:8px 20px 32px;font-size:13.5px;line-height:1.6}
+  .g-body h3{margin:20px 0 6px;font-size:13px;font-weight:700}
+  .g-body ul{list-style:disc;margin:0;padding-left:20px} .g-body ol{list-style:decimal;margin:0;padding-left:22px}
+  .g-body li{margin:5px 0}
+  .g-note{position:absolute;right:0;top:calc(100% + 10px);width:210px;z-index:50;padding:12px 14px;background:var(--inv);color:var(--invfg);border-radius:14px;font-size:13px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .g-note::before{content:"";position:absolute;top:-6px;right:34px;width:12px;height:12px;background:var(--inv);transform:rotate(45deg)}
+  .g-note[hidden]{display:none}
+  .gn-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+  .g-note .btn{background:var(--invfg);color:var(--inv);border-color:transparent;padding:5px 12px;font-size:12px}
+  .gn-x{background:none;border:0;color:inherit;font-size:20px;line-height:1;cursor:pointer;opacity:.8;padding:0 4px}
+  @media(max-width:640px){.g-panel{top:auto;left:0;right:0;width:100%;max-height:86vh;border-left:0;border-top:1px solid var(--bd);border-radius:20px 20px 0 0;transform:translateY(100%)}.g-panel.on{transform:none}}
+  /* v2n: Summary card has no chart, so rows get their room back (Trip card keeps its own spacing via .tr) */
+  .sc:not(.tr) .verdict{margin-top:14px}
+  .sc:not(.tr) .title{margin-top:14px}
+  .sc:not(.tr) .ledger{margin-top:14px}
+  .sc:not(.tr) .g3{margin-top:12px}
+  .sc:not(.tr) .cols{margin-top:14px}
+  .sc:not(.tr) .col{padding:8px 12px}
+  .sc:not(.tr) .it{padding:4px 0}
+  .sc:not(.tr) .lab{margin-bottom:4px}
+  .sc .lab{font-size:9px;letter-spacing:.04em;white-space:nowrap}
+</style>
+</head>
+<body class="pb-24 lg:pb-10">
+
+<header class="sticky top-0 z-40 border-b bd" style="background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(8px)">
+  <div class="max-w-7xl mx-auto px-4 lg:px-8 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-3 min-w-0">
+      <a class="mu text-[13px] font-medium whitespace-nowrap hover:opacity-70" href="index.html">← <span class="hidden sm:inline">Tools Hub</span></a>
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background:var(--inv);color:var(--invfg)" aria-hidden="true">🚕</div>
+      <h1 class="font-bold text-[17px] tracking-tight whitespace-nowrap">Cab Economics</h1>
+      <span class="pill dsk">Financial Tools</span>
+    </div>
+    <div class="relative flex items-center gap-2" id="setWrap">
+      <span class="relative" id="guideWrap"><button class="btn icon tipb" id="guideBtn" type="button" onclick="openGuide()" aria-haspopup="dialog" aria-label="Guide" data-tip="Guide"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5M12 17.5h.01"/></svg></button>
+      <div class="g-note" id="guideNote" role="note" hidden><b>New here?</b> See the guide<div class="gn-row"><button class="btn" type="button" onclick="openGuide()">Open guide</button><button class="gn-x" type="button" onclick="guideSeen()" aria-label="Dismiss">×</button></div></div></span>
+      <button class="btn icon tipb" id="setBtn" type="button" onclick="setToggle()" aria-haspopup="true" aria-expanded="false" aria-label="Settings" data-tip="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+      <div class="menu setmenu" id="setMenu" hidden>
+        <div class="mh">Settings</div>
+        <button class="mi" id="allBtn" type="button" onclick="toggleAll(); closeSet()"><span id="allIc"></span><span id="allLbl">Collapse all sections</span></button>
+        <div class="sep"></div>
+        <button class="mi" type="button" onclick="exportData(); closeSet()"><span id="icExp"></span>Export backup</button>
+        <button class="mi" type="button" onclick="$('impFile').click(); closeSet()"><span id="icImp"></span>Import backup</button>
+        <button class="mi" type="button" onclick="resetAll(); closeSet()"><span id="icRst"></span>Reset to sample vehicles</button>
+        <div class="sep"></div>
+        <button class="mi" id="themeBtn" type="button" onclick="toggleTheme(); closeSet()"><span id="themeIc"></span><span id="themeLbl">Dark mode</span></button>
+      </div>
+      <input id="impFile" type="file" accept="application/json,.json" class="hide" onchange="importData(this)">
+    </div>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-4 lg:px-8 pt-5">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="seg self-start"><button id="tabCalc" class="on" onclick="setView('calc')">Calculator</button><button id="tabCmp" onclick="setView('cmp')">Compare</button><button id="tabSum" onclick="setView('sum')">Summary</button><button id="tabTrip" onclick="setView('trip')">Trip Calc</button></div>
+    <div id="chips" class="w-full sm:w-auto sm:min-w-[340px] sm:max-w-sm"></div>
+    <div id="tripTools" class="hide flex items-center gap-3 self-start sm:self-auto"><div class="seg"><button id="tpCtL" type="button">Light card</button><button id="tpCtD" type="button">Dark card</button></div>
+      <div class="relative" id="tpShWrap">
+        <button class="btn" id="tpShBtn" type="button" aria-haspopup="true" aria-expanded="false" style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Share <span aria-hidden="true">▾</span></button>
+        <div class="menu" id="tpShMenu" hidden style="left:auto;right:0;width:210px">
+          <button class="mi" type="button" onclick="tpShClose();tpShare()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Share image</button>
+          <button class="mi" id="tpCpBtn" type="button" onclick="tpShClose();tpCopyImg()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy image</button>
+          <button class="mi" type="button" onclick="tpShClose();tpCopyText()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Copy as text</button>
+          <div class="sep"></div>
+          <button class="mi" type="button" onclick="tpShClose();tpDownload()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download image</button>
+          <div class="sep"></div>
+          <div class="mh">Share page to</div>
+          <button class="mi" type="button" onclick="tpShClose();shareTo('whatsapp')"><span class="nb" aria-hidden="true">WA</span>WhatsApp</button>
+          <button class="mi" type="button" onclick="tpShClose();shareTo('facebook')"><span class="nb" aria-hidden="true">f</span>Facebook</button>
+          <button class="mi" type="button" onclick="tpShClose();shareTo('x')"><span class="nb" aria-hidden="true">X</span>X</button>
+          <button class="mi" type="button" onclick="tpShClose();shareTo('telegram')"><span class="nb" aria-hidden="true">TG</span>Telegram</button>
+          <button class="mi" type="button" onclick="tpShClose();shareTo('linkedin')"><span class="nb" aria-hidden="true">in</span>LinkedIn</button>
+          <button class="mi" type="button" onclick="tpShClose();shareTo('email')"><span class="nb" aria-hidden="true">✉</span>Email</button>
+        </div>
+      </div></div>
+  </div>
+</div>
+
+<!-- CALCULATOR VIEW -->
+<main id="viewCalc" class="max-w-7xl mx-auto px-4 lg:px-8 pt-5 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+  <div class="space-y-5 min-w-0">
+
+    <section class="card p-5 space-y-3" data-sec="s1">
+      <div class="sec-head flex justify-between items-center"><div><h2 class="font-semibold text-sm">1. Vehicle & Loan<span class="sec-sum" id="sum-s1"></span></h2><p class="sec-desc">Price, downpayment, loan terms, resale value and FD interest</p></div></div>
+      <div class="row"><label>Vehicle name</label><input id="name" data-k class="inp !w-48 !text-left" type="text"></div>
+      <div class="row"><label>On-road price (₹)</label><input id="price" data-k class="inp" type="number" step="5000"></div>
+      <div class="row"><label>Downpayment (%)</label><div class="flex items-center gap-2"><span id="downAmt" class="text-xs mu"></span><input id="down" data-k class="inp !w-20" type="number"></div></div>
+      <div class="row"><label>Loan interest (% p.a.)</label><input id="rate" data-k class="inp" type="number" step="0.1"></div>
+      <div class="row"><label>Loan tenure (months)</label><input id="ten" data-k class="inp" type="number" step="6"></div>
+      <div class="row pt-3 border-t bd"><div class="lbl">Resale value (₹)<span class="help"><button class="q" type="button" aria-describedby="tipResale" aria-label="What is resale value?">?</button><span class="tip" id="tipResale" role="tooltip">What you expect to sell the vehicle for at the end of year 6. It is added to your 6-year net and can bring the payback year forward. Enter 0 if you won't sell it.</span></span></div><input id="resale" data-k class="inp" type="number" step="5000"></div>
+      <div class="row"><div class="lbl">FD interest on downpayment (% p.a.)<span class="help"><button class="q" type="button" aria-describedby="tipFd" aria-label="What is FD interest?">?</button><span class="tip" id="tipFd" role="tooltip">The interest your downpayment would have earned in a fixed deposit. Enter 0 to ignore.</span></span></div><input id="fd" data-k class="inp !w-20" type="number" step="0.1"></div>
+    </section>
+
+    <section class="card p-5 space-y-3" data-sec="s2">
+      <div class="sec-head flex justify-between items-center"><div><h2 class="font-semibold text-sm">2. Earnings & Fuel<span class="sec-sum" id="sum-s2"></span></h2><p class="sec-desc">Earnings per km, working days, fuel price and mileage</p></div></div>
+      <div class="row"><label>Net revenue per km (₹)</label><input id="tariff" data-k class="inp" type="number" step="0.25"></div>
+      <div class="row"><label>Working days / month</label><input id="days" data-k class="inp" type="number"></div>
+      <div class="row"><label>Fuel measured in</label><select id="fuelUnit" data-k class="inp !w-48"><option value="kg">CNG (kg)</option><option value="ltr">Petrol / Diesel (ltr)</option><option value="kWh">EV (kWh)</option></select></div>
+      <div class="row"><label id="fuelPriceLbl"></label><input id="cng" data-k class="inp" type="number"></div>
+      <div class="row"><label id="milLbl"></label><input id="mil" data-k class="inp" type="number" step="0.5"></div>
+      <div class="row pt-3 border-t bd"><span class="mu">Fuel cost per km</span><span id="fuelKm" class="font-semibold"></span></div>
+      <div class="row pt-3 border-t bd"><label class="flex items-center gap-2"><input id="ovOn" data-k type="checkbox"> Use this vehicle's own daily distance</label><input id="ov" data-k class="inp !w-24" type="number" step="5"></div>
+    </section>
+
+    <section class="card p-5" data-sec="s3">
+      <div class="sec-head flex justify-between items-center mb-3"><div><h2 class="font-semibold text-sm">3. Running Costs<span class="sec-sum" id="sum-s3"></span></h2><p class="sec-desc">Maintenance per km and fixed yearly overheads</p></div></div>
+      <div class="space-y-3">
+        <details class="border bd rounded-xl" open>
+          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Routine servicing</span><span class="flex items-center gap-3"><span id="svcKm" class="mu"></span><span class="chev mu">▾</span></span></summary>
+          <div class="p-4 grid grid-cols-2 gap-4 text-xs">
+            <div><div class="mu mb-1">Service interval (km)</div><input id="intv" data-k class="inp !w-full" type="number" step="500"></div>
+            <div><div class="mu mb-1">Cost per service (₹)</div><input id="svc" data-k class="inp !w-full" type="number" step="500"></div>
+          </div>
+        </details>
+        <details class="border bd rounded-xl" open>
+          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Wear & replacements <span class="mu font-normal">(km-based)</span></span><span class="flex items-center gap-3"><button class="btn !py-1" onclick="addWear(event)">+ Add</button><span class="chev mu">▾</span></span></summary>
+          <div id="wearList" class="p-3 space-y-2"></div>
+        </details>
+        <details class="border bd rounded-xl" open>
+          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Fixed overheads <span class="mu font-normal">(time-based: insurance, permits, GPS…)</span></span><span class="flex items-center gap-3"><button class="btn !py-1" onclick="addFixed(event)">+ Add</button><span class="chev mu">▾</span></span></summary>
+          <div id="fixedList" class="p-3 space-y-2"></div>
+        </details>
+      </div>
+    </section>
+
+    <section class="card p-5" data-sec="s4">
+      <div class="sec-head flex justify-between items-center mb-2"><div><h2 class="font-semibold text-sm">4. Monthly Profit by Daily Distance<span class="sec-sum" id="sum-s4"></span></h2><p class="sec-desc">After EMI, overheads and lost FD interest</p></div></div>
+      <svg id="chart" viewBox="0 0 640 240" class="w-full"></svg>
+    </section>
+
+    <section class="card p-5" data-sec="s5">
+      <div class="sec-head flex justify-between items-center mb-3"><div><h2 class="font-semibold text-sm">5. Daily Run Scenarios (Years 1–5)<span class="sec-sum" id="sum-s5"></span></h2><p class="sec-desc">Your planned run and the breakeven are highlighted</p></div></div>
+      <div class="overflow-x-auto"><table><thead><tr><th>Daily run</th><th>Monthly km</th><th>Revenue</th><th>All costs</th><th>Take-home / mo</th><th>Per day</th></tr></thead><tbody id="matrix"></tbody></table></div>
+      <p class="sm:hidden text-[11px] mu mt-2">Swipe the table sideways to see all columns →</p>
+    </section>
+
+    <section class="card p-5" data-sec="s6">
+      <div class="sec-head flex justify-between items-center mb-3"><div><h2 class="font-semibold text-sm">6. 6-Year Cash Flow at Your Planned Run<span class="sec-sum" id="sum-s6"></span></h2><p class="sec-desc">EMI follows your loan tenure · downpayment counted at start · resale added in year 6</p></div></div>
+      <div class="overflow-x-auto"><table><thead><tr><th>Year</th><th>Km run</th><th>Revenue</th><th>Fuel</th><th>Maintenance</th><th>Overheads</th><th>EMI paid</th><th>Cash flow</th><th>Cumulative</th></tr></thead><tbody id="years"></tbody></table></div>
+      <p class="sm:hidden text-[11px] mu mt-2">Swipe the table sideways to see all columns →</p>
+      <p id="yearsNote" class="text-xs mu mt-3"></p>
+    </section>
+  </div>
+
+  <aside class="hidden lg:block sticky top-20 space-y-4">
+    <div class="card p-5 space-y-4">
+      <div>
+        <div class="row"><span class="h">Planned daily run</span><b id="runLbl" class="text-sm"></b></div>
+        <input id="run" type="range" min="50" max="500" step="5" value="150" class="mt-2">
+        <div id="runNote" class="text-[11px] mu mt-1"></div>
+      </div>
+      <div class="rounded-xl p-4" style="background:var(--inv);color:var(--invfg)">
+        <div class="text-[11px] font-semibold opacity-70 uppercase tracking-wider">Breakeven · <span id="vName"></span></div>
+        <div id="beBig" class="text-4xl font-extrabold mt-1"></div>
+        <div id="beNote" class="text-xs mt-1 opacity-80"></div>
+      </div>
+      <div class="space-y-3">
+        <div class="row"><span class="mu">Take-home / month <span class="text-[11px]">(cash)</span></span><b id="rTake" class="text-base"></b></div>
+        <div class="row"><span class="mu">After lost FD interest</span><b id="rEcon"></b></div>
+        <div class="row"><span class="mu">Monthly EMI</span><b id="rEmi"></b></div>
+        <div class="row"><span class="mu">Running cost / km</span><b id="rVar"></b></div>
+        <div class="row border-t bd pt-3"><span class="mu">Payback</span><b id="rPay"></b></div>
+        <div class="row"><span class="mu">6-yr net <span class="text-[11px]">(after downpayment, + resale)</span></span><b id="rTotal"></b></div>
+      </div>
+    </div>
+    <p class="text-[11px] mu px-1">Owner-driver: take-home includes your own driving income — no driver wage is deducted.</p>
+  </aside>
+</main>
+
+<!-- SUMMARY VIEW (v2) -->
+<main id="viewSum" class="hide max-w-7xl mx-auto px-4 lg:px-8 pt-5 flex flex-col items-center gap-4">
+  <div class="flex flex-wrap items-center justify-center gap-3">
+    <div class="seg"><button id="ctL" onclick="setCardTheme('light')">Light card</button><button id="ctD" onclick="setCardTheme('dark')">Dark card</button></div>
+    <div class="relative" id="shWrap">
+      <button class="btn" id="shBtn" type="button" onclick="shToggle()" aria-haspopup="true" aria-expanded="false" style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Share <span aria-hidden="true">▾</span></button>
+      <div class="menu" id="shMenu" hidden style="left:auto;right:0;width:210px">
+        <button class="mi" type="button" onclick="shClose();shareLink()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>Share link</button>
+        <button class="mi" type="button" onclick="shClose();shareCard()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Share image</button>
+        <button class="mi" id="cpBtn" type="button" onclick="shClose();copyCard()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copy image</button>
+        <div class="sep"></div>
+        <button class="mi" type="button" onclick="shClose();downloadCard()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Download image</button>
+        <div class="sep"></div>
+        <div class="mh">Share page to</div>
+        <button class="mi" type="button" onclick="shClose();shareTo('whatsapp')"><span class="nb" aria-hidden="true">WA</span>WhatsApp</button>
+        <button class="mi" type="button" onclick="shClose();shareTo('facebook')"><span class="nb" aria-hidden="true">f</span>Facebook</button>
+        <button class="mi" type="button" onclick="shClose();shareTo('x')"><span class="nb" aria-hidden="true">X</span>X</button>
+        <button class="mi" type="button" onclick="shClose();shareTo('telegram')"><span class="nb" aria-hidden="true">TG</span>Telegram</button>
+        <button class="mi" type="button" onclick="shClose();shareTo('linkedin')"><span class="nb" aria-hidden="true">in</span>LinkedIn</button>
+        <button class="mi" type="button" onclick="shClose();shareTo('email')"><span class="nb" aria-hidden="true">✉</span>Email</button>
+      </div>
+    </div>
+  </div>
+  <div id="sumMsg" class="text-xs mu empty:hidden" role="status"></div>
+  <div id="sumWrap"><div id="sumCard" class="sc"></div></div>
+  <p class="text-[11px] mu text-center max-w-sm">The image is saved at 1080 × 1920 px for stories and status. It shows the vehicle selected above.</p>
+</main>
+<div id="exportHost" aria-hidden="true" style="position:fixed;left:-10000px;top:0;width:420px;pointer-events:none"></div>
+
+<!-- TRIP CALC VIEW (v2d) -->
+<main id="viewTrip" class="hide max-w-7xl mx-auto px-4 lg:px-8 pt-5">
+ <div class="tp-wrap">
+  <div class="tp-panel" data-tp="in">
+    <div class="tp-head"><h2>Enter Trip/Day Data</h2><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <div class="tp-body">
+    <p class="tp-sub">Enter the totals for the period you want to check.</p>
+    <div class="tp-row"><label for="tp_earned">Total earned</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_earned" inputmode="decimal" placeholder="2,500"></div></div>
+    <div class="tp-row"><label for="tp_km">Distance ridden (km)</label><div class="tp-fld"><input class="tp-inp" id="tp_km" inputmode="decimal" placeholder="150"></div></div>
+    <div class="tp-row"><label for="tp_hrs">Time spent (hours)</label><div class="tp-fld"><input class="tp-inp" id="tp_hrs" inputmode="decimal" placeholder="9"></div></div>
+    <div class="tp-row"><label for="tp_unit">Fuel measured in</label><div class="tp-fld"><select class="tp-inp" id="tp_unit"><option value="litre">Litre</option><option value="kg">kg</option></select></div></div>
+    <div class="tp-row"><label for="tp_price">Fuel price (per litre)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_price" inputmode="decimal" placeholder="95"></div></div>
+    <div class="tp-row"><label for="tp_mil">Mileage (km per litre)</label><div class="tp-fld"><input class="tp-inp" id="tp_mil" inputmode="decimal" placeholder="18"></div></div>
+    <div class="tp-row"><label for="tp_maint">Maintenance (per km)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_maint" inputmode="decimal" placeholder="1.50"></div></div>
+    <div class="tp-row"><label for="tp_other">Other expenses (total)</label><div class="tp-fld rs"><span>₹</span><input class="tp-inp" id="tp_other" inputmode="decimal" placeholder="150"></div></div>
+    <p class="tp-hint">Maintenance is your set-aside rate in ₹ per km. Other expenses is the total ₹ for the period, such as a daily pass, state tax or tolls. Both are included in the per km costs.</p>
+    <button class="btn tp-clear" id="tpClear" type="button">Clear all</button>
+    </div>
+  </div>
+  <div class="tp-panel" data-tp="tx">
+    <div class="tp-head"><h2>Quick Summary</h2><span class="tp-st" id="tpCpMsg" role="status"></span><button class="btn icon tipb" id="tpCpTxt" type="button" aria-label="Copy" data-tip="Copy"></button><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <div class="tp-body"><textarea id="tpMd" readonly aria-label="Card data as markdown" placeholder="Fill in earned, km and mileage to see the card data here as simple markdown."></textarea></div>
+  </div>
+  <div class="tp-panel" data-tp="cd">
+    <div class="tp-head"><h2>Quick Summary</h2><button class="tp-tog" type="button" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+    <div class="tp-body">
+      <div class="tp-cardbox" id="tpCardBox"><div id="tpCardWrap"><div id="tpCard" class="sc tr"></div></div></div>
+      <div id="tpMsg" class="text-xs mu text-center" role="status" style="min-height:18px;margin-top:10px"></div>
+      <p class="text-[11px] mu text-center" style="margin:4px 0 0">The image is saved at 1080 × 1920 px for stories and status.</p>
+    </div>
+  </div>
+ </div>
+</main>
+
+<!-- COMPARE VIEW -->
+<main id="viewCmp" class="hide max-w-7xl mx-auto px-4 lg:px-8 pt-5 space-y-5">
+  <section class="card p-5">
+    <div class="row"><div><div class="h">Shared daily run</div><div class="text-xs mu mt-1">Applies to every vehicle unless it has its own distance set</div></div><b id="runLblC" class="text-lg whitespace-nowrap"></b></div>
+    <input id="runC" type="range" min="50" max="500" step="5" value="150" class="mt-3">
+  </section>
+  <section class="card p-5" data-sec="c1">
+    <div class="sec-head flex items-center justify-between gap-3 mb-1">
+      <h2 class="font-semibold text-sm">1. Side-by-Side Comparison<span class="sec-sum" id="sum-c1"></span></h2>
+      <div class="seg sec-hide"><button id="perM" onclick="setPer('m')">Monthly</button><button id="perY" onclick="setPer('y')">Yearly</button></div>
+    </div>
+    <p id="cmpSub" class="text-xs mu mb-3"></p>
+    <div class="overflow-x-auto"><table id="cmpTable"></table></div>
+    <p id="cmpNote" class="text-[11px] mu mt-2 empty:hidden"></p>
+    <p class="sm:hidden text-[11px] mu mt-2">Swipe the table sideways to see all columns →</p>
+  </section>
+  <section class="card p-5" data-sec="c2">
+    <div class="sec-head mb-2"><h2 class="font-semibold text-sm">2. Profit by Daily Distance (All Vehicles)<span class="sec-sum" id="sum-c2"></span></h2><p id="cmpChartSub" class="text-xs mu sec-hide">After EMI, overheads and lost FD interest · number in brackets = breakeven km/day</p></div>
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-2"><div id="legend" class="flex flex-wrap gap-4 text-xs"></div><span class="pill">● you are here</span></div>
+    <svg id="chartC" viewBox="0 0 640 240" class="w-full"></svg>
+  </section>
+</main>
+
+<div id="mobBar" class="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t bd p-3" style="background:var(--card)">
+  <div class="flex items-center justify-between gap-4">
+    <div><div class="h">Breakeven</div><div id="mBe" class="font-extrabold text-lg"></div></div>
+    <div class="flex-1"><input id="runM" type="range" min="50" max="500" step="5" value="150"><div id="runLblM" class="text-[11px] mu text-center"></div></div>
+    <div class="text-right"><div class="h">Take-home/mo</div><div id="mTake" class="font-extrabold text-lg"></div></div>
+  </div>
+</div>
+
+<div class="g-back" id="guideBack" onclick="closeGuide()"></div>
+<aside class="g-panel" id="guide" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-hidden="true">
+  <div class="g-head"><h2 id="guideTitle">How this calculator works</h2><button class="btn icon" id="guideClose" type="button" onclick="closeGuide()" aria-label="Close guide" style="font-size:18px">×</button></div>
+  <div class="g-body">
+    <h3>Quick start</h3>
+    <ol>
+      <li>Open the <b>Calculator</b> tab and fill in sections 1 to 3 for your vehicle.</li>
+      <li>Check the results: the box on the right, or the bar at the bottom on phones. It shows your breakeven distance, monthly take-home and payback.</li>
+      <li>Add more vehicles from the vehicle switcher at the top, then open <b>Compare</b> to see them side by side.</li>
+    </ol>
+    <h3>The tabs</h3>
+    <ul>
+      <li><b>Calculator:</b> where you enter and edit everything about one vehicle. The vehicle switcher at the top picks which one you're working on.</li>
+      <li><b>Compare:</b> shows all your vehicles side by side at one shared daily distance. It is view-only.</li>
+      <li><b>Summary:</b> a shareable card for the selected vehicle. Share it as an image or a link.</li>
+      <li><b>Trip Calc:</b> a quick calculator for one trip or one day. It is separate from your vehicles.</li>
+    </ul>
+    <h3>Where to change things</h3>
+    <ul>
+      <li>To change a vehicle's price, loan, fuel, mileage or any other number, go to the <b>Calculator</b> tab, pick that vehicle at the top, and edit it there.</li>
+      <li><b>Compare</b> and <b>Summary</b> update automatically with your changes. You can't edit vehicle details on those tabs.</li>
+      <li><b>Trip Calc</b> has its own numbers. Changing a vehicle does not change it, and changing it does not change any vehicle.</li>
+    </ul>
+    <h3>The Calculator sections</h3>
+    <ol>
+      <li><b>Vehicle &amp; Loan:</b> price, downpayment, loan interest and length, resale value, and the interest your downpayment would have earned in a fixed deposit.</li>
+      <li><b>Earnings &amp; Fuel:</b> what you earn per km, working days, fuel type, fuel price and mileage.</li>
+      <li><b>Running Costs:</b> maintenance and fixed monthly costs.</li>
+      <li><b>Monthly Profit by Daily Distance:</b> how monthly profit changes as you drive more or fewer km.</li>
+      <li><b>Daily Run Scenarios (Years 1–5):</b> results for different daily distances over the first five years.</li>
+      <li><b>6-Year Cash Flow at Your Planned Run:</b> what you gain or lose over six years.</li>
+    </ol>
+    <h3>Words used here</h3>
+    <ul>
+      <li><b>Planned daily run:</b> the distance you expect to drive each day. The slider is shared by all vehicles, unless a vehicle has its own distance turned on.</li>
+      <li><b>Breakeven:</b> the daily distance at which you cover the loan, overheads and the lost fixed-deposit interest.</li>
+      <li><b>Take-home (cash):</b> what you keep each month after the loan, fuel, maintenance and overheads.</li>
+      <li><b>After lost FD interest:</b> take-home minus the interest your downpayment could have earned in a fixed deposit.</li>
+      <li><b>Payback:</b> the year in which your downpayment is earned back.</li>
+      <li><b>6-year net:</b> the total result over six years after the downpayment, including the resale value.</li>
+    </ul>
+    <h3>Saving and sharing</h3>
+    <ul>
+      <li>Your numbers are saved in this browser only. Use <b>Settings → Export backup</b> to keep a copy or move to another device, and <b>Import backup</b> to restore it.</li>
+      <li>A shared link adds the vehicle as a new one for whoever opens it. It never replaces their own vehicles.</li>
+      <li>Trip Calc numbers are temporary and are not included in backups.</li>
+    </ul>
+  </div>
+</aside>
+
+<script>
+const $=id=>document.getElementById(id);
+const inr=n=>(n<0?'−':'')+'₹'+Math.round(Math.abs(n)).toLocaleString('en-IN');
+const sg=n=>(n>=0?'+':'')+inr(n), cls=n=>n>=0?'pos':'neg';
+const COLORS=['var(--fg)','#2563eb','#d97706','#7c3aed','#059669','#e11d48','#0891b2','#ca8a04','#db2777','#64748b'], MAXV=10;
+
+const DEFAULTS=[
+ {name:'Dzire CNG',c:0,price:700000,down:15,rate:10,ten:60,resale:150000,fd:7,tariff:9.35,days:25,fuelUnit:'kg',cng:97,mil:28,intv:10000,svc:7000,ovOn:false,ov:150,
+  wear:[{n:'Tyres & battery set',c:15000,km:50000},{n:'Shocks & clutch overhaul',c:20000,km:100000}],fixed:[{n:'Commercial insurance',a:18000},{n:'Permit & fitness passing',a:4000}]},
+ {name:'Ertiga Diesel',c:1,price:800000,down:15,rate:10,ten:60,resale:200000,fd:7,tariff:11,days:25,fuelUnit:'ltr',cng:92,mil:17,intv:10000,svc:9000,ovOn:false,ov:150,
+  wear:[{n:'Tyres & battery set',c:24000,km:50000},{n:'Clutch & suspension',c:25000,km:100000}],fixed:[{n:'Commercial insurance',a:22000},{n:'Permit & fitness passing',a:4000}]},
+ {name:'Splendor bike',c:2,price:100000,down:20,rate:12,ten:36,resale:25000,fd:7,tariff:4,days:26,fuelUnit:'ltr',cng:105,mil:55,intv:3000,svc:1500,ovOn:true,ov:120,
+  wear:[{n:'Tyres & chain set',c:4000,km:20000},{n:'Battery & clutch plates',c:2500,km:30000}],fixed:[{n:'Insurance',a:3000},{n:'Registration & PUC',a:1000}]}
+];
+const KEY='cabEconomics_v1', UNITS=['kg','ltr','kWh'];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const num=(x,d=0)=>(x===''||x==null||!Number.isFinite(+x))?d:+x;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fixColors(a){
+  const u=new Set(); a.forEach(v=>{if(Number.isInteger(v.c)&&v.c>=0&&v.c<COLORS.length&&!u.has(v.c))u.add(v.c); else v.c=-1});
+  a.forEach(v=>{if(v.c<0){let k=0; while(u.has(k))k++; v.c=k; u.add(k)}}); return a;
+}
+function clean(v){
+  v=v||{}; const b=DEFAULTS[0], o={name:String(v.name||'Untitled').slice(0,60)};
+  ['price','down','rate','ten','resale','fd','tariff','days','cng','mil','intv','svc','ov'].forEach(k=>o[k]=num(v[k],b[k]));
+  o.c=num(v.c,-1); if(v.fdOn===false)o.fd=0; o.ovOn=!!v.ovOn;
+  o.fuelUnit=UNITS.includes(v.fuelUnit)?v.fuelUnit:(v.fuelUnit==='litre'?'ltr':'kg');
+  o.wear=(Array.isArray(v.wear)?v.wear:[]).slice(0,20).map(w=>({n:String((w||{}).n||'Item').slice(0,60),c:num((w||{}).c),km:num((w||{}).km,10000)}));
+  o.fixed=(Array.isArray(v.fixed)?v.fixed:[]).slice(0,20).map(f=>({n:String((f||{}).n||'Item').slice(0,60),a:num((f||{}).a)}));
+  return o;
+}
+let vehicles=clone(DEFAULTS), act=0, view='calc', G=150, per='m', secOpen={}, st=null, cardTheme='light';
+try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(st&&st.per==='y')per='y';
+if(st&&st.ct==='dark')cardTheme='dark';
+if(st&&st.open&&typeof st.open==='object')secOpen=st.open;
+if(st&&Array.isArray(st.vehicles)&&st.vehicles.length){
+  vehicles=fixColors(st.vehicles.slice(0,MAXV).map(clean)); act=Math.min(Math.max(0,num(st.act)),vehicles.length-1); G=Math.min(500,Math.max(50,num(st.G,150)));
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({vehicles,act,G,per,open:secOpen,ct:cardTheme}))}catch(e){}}
+const syncRuns=()=>['run','runM','runC'].forEach(x=>$(x).value=G);
+/* Theme: same storage key and attribute as the Web Tools hub */
+function applyTheme(mode){
+  const dark=mode==='dark', root=document.documentElement;
+  if(dark)root.setAttribute('data-theme','dark'); else root.removeAttribute('data-theme');
+  $('themeIc').innerHTML=dark?ICON_SUN:ICON_MOON; $('themeLbl').textContent=dark?'Light mode':'Dark mode';
+}
+function toggleTheme(){
+  const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+  applyTheme(next); try{localStorage.setItem('hub-theme',next)}catch(e){}
+}
+function exportData(){
+  const b=new Blob([JSON.stringify({app:'cab-economics',version:1,G,vehicles},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='cab-economics-backup.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importData(inp){
+  const f=inp.files[0]; inp.value=''; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    let d; try{d=JSON.parse(r.result); if(!d||!Array.isArray(d.vehicles)||!d.vehicles.length)throw 0}catch(e){alert('Could not import: this is not a valid Cab Economics backup file.');return}
+    if(!confirm('Replace your current vehicles with the imported file?'))return;
+    vehicles=fixColors(d.vehicles.slice(0,MAXV).map(clean)); act=0; G=Math.min(500,Math.max(50,num(d.G,150))); syncRuns(); loadInputs(); render();
+  };
+  r.readAsText(f);
+}
+function resetAll(){ if(!confirm('Reset to the sample vehicles? Your changes will be lost.'))return; vehicles=clone(DEFAULTS); act=0; G=150; syncRuns(); loadInputs(); render(); }
+
+function buildLists(){
+  const p=vehicles[act];
+  const arrows=(i,n,mv,del)=>`<span class="wbt"><button class="mu px-2 py-1 text-sm ${i===0?'opacity-30 pointer-events-none':''}" onclick="${mv}(${i},-1)" title="Move up">▲</button><button class="mu px-2 py-1 text-sm ${i===n-1?'opacity-30 pointer-events-none':''}" onclick="${mv}(${i},1)" title="Move down">▼</button><button class="mu px-2 py-1 text-sm" onclick="${del}(${i})" title="Remove">✕</button></span>`;
+  $('wearList').innerHTML=p.wear.length?p.wear.map((w,i)=>`<div class="wr"><div class="wr1"><input class="inp wnm" type="text" value="${esc(w.n)}" oninput="editWear(${i},'n',this.value)" aria-label="Item name">${arrows(i,p.wear.length,'moveWear','delWear')}</div><div class="wr2"><span class="mu">₹</span><input class="inp wn" type="number" value="${w.c}" oninput="editWear(${i},'c',this.value)" aria-label="Cost"><span class="mu">every</span><input class="inp wn" type="number" value="${w.km}" oninput="editWear(${i},'km',this.value)" aria-label="Interval in km"><span class="mu">km</span><span id="ws${i}" class="wsub"></span></div></div>`).join(''):'<div class="text-xs mu p-2">No items yet — use + Add</div>';
+  $('fixedList').innerHTML=p.fixed.length?p.fixed.map((f,i)=>`<div class="wr"><div class="wr1"><input class="inp wnm" type="text" value="${esc(f.n)}" oninput="editFixed(${i},'n',this.value)" aria-label="Item name">${arrows(i,p.fixed.length,'moveFixed','delFixed')}</div><div class="wr2"><span class="mu">₹</span><input class="inp wn" type="number" value="${f.a}" oninput="editFixed(${i},'a',this.value)" aria-label="Cost per year"><span class="mu">per year</span><span id="fs${i}" class="wsub"></span></div></div>`).join(''):'<div class="text-xs mu p-2">No items yet — use + Add</div>';
+}
+function editWear(i,k,v){vehicles[act].wear[i][k]=k==='n'?v:(parseFloat(v)||0);render()}
+function editFixed(i,k,v){vehicles[act].fixed[i][k]=k==='n'?v:(parseFloat(v)||0);render()}
+function addWear(e){e.preventDefault(); if(vehicles[act].wear.length>=20)return; vehicles[act].wear.push({n:'New item',c:0,km:10000}); buildLists(); render()}
+function addFixed(e){e.preventDefault(); if(vehicles[act].fixed.length>=20)return; vehicles[act].fixed.push({n:'New item',a:0}); buildLists(); render()}
+function mv(arr,i,d){const j=i+d; if(j<0||j>=arr.length)return; [arr[i],arr[j]]=[arr[j],arr[i]]; buildLists(); render()}
+function moveWear(i,d){mv(vehicles[act].wear,i,d)}
+function moveFixed(i,d){mv(vehicles[act].fixed,i,d)}
+function delWear(i){vehicles[act].wear.splice(i,1); buildLists(); render()}
+function delFixed(i){vehicles[act].fixed.splice(i,1); buildLists(); render()}
+
+function calc(p){
+  const m={p,run:p.ovOn?p.ov:G,days:p.days||25};
+  m.downAmt=p.price*Math.min(100,Math.max(0,p.down))/100; m.loan=p.price-m.downAmt;
+  const r=p.rate/1200;
+  m.emi=p.ten>0?(r>0?m.loan*r*Math.pow(1+r,p.ten)/(Math.pow(1+r,p.ten)-1):m.loan/p.ten):0;
+  m.opp=m.downAmt*p.fd/1200;
+  m.fuelKm=p.cng/(p.mil||1); m.svcKm=p.svc/(p.intv||1);
+  m.maintKm=m.svcKm+p.wear.reduce((a,w)=>a+w.c/(w.km||1),0);
+  m.varKm=m.fuelKm+m.maintKm; m.margin=p.tariff-m.varKm;
+  m.opsYr=p.fixed.reduce((a,f)=>a+f.a,0); m.ops=m.opsYr/12;
+  m.be=m.margin>0?(m.emi+m.ops+m.opp)/m.days/m.margin:Infinity;
+  m.cash=km=>km*m.days*m.margin-m.ops-m.emi;
+  m.take=m.cash(m.run); m.econ=m.take-m.opp;
+  let cum=-m.downAmt; m.pay=null; m.yrs=[];
+  for(let y=1;y<=6;y++){
+    const emiM=Math.max(0,Math.min(12,p.ten-(y-1)*12)), emiY=m.emi*emiM, yKm=m.run*m.days*12;
+    const rev=yKm*p.tariff, fuel=yKm*m.fuelKm, mnt=yKm*m.maintKm, cf=rev-fuel-mnt-m.opsYr-emiY;
+    cum+=cf+(y===6?p.resale:0); if(m.pay===null&&cum>=0)m.pay=y;
+    m.yrs.push({y,yKm,emiM,emiY,rev,fuel,mnt,cf,cum});
+  }
+  m.total=cum; return m;
+}
+
+function chartSVG(list,W,H,single){
+  const L=56,R=16,T=14,B=30,xs=[];
+  const need=Math.max(...list.map(m=>Math.max(m.run,isFinite(m.be)?Math.ceil(m.be):0)));
+  const xmax=Math.min(500,Math.max(300,Math.ceil(need/50)*50)), ticks=[]; for(let k=50;k<=xmax;k+=50)ticks.push(k);
+  for(let k=50;k<=xmax;k+=10)xs.push(k);
+  const all=list.flatMap(m=>xs.map(k=>m.cash(k)-m.opp));
+  const lo=Math.min(0,...all),hi=Math.max(0,...all),pad=(hi-lo)*.1||1;
+  const X=k=>L+(k-50)/(xmax-50)*(W-L-R), Y=y=>T+(1-(y-(lo-pad))/((hi+pad)-(lo-pad)))*(H-T-B);
+  let s='<g stroke="var(--bd)">';
+  ticks.forEach(k=>s+=`<line x1="${X(k)}" x2="${X(k)}" y1="${T}" y2="${H-B}"/>`);
+  s+='</g><g fill="var(--mu)" font-size="11" text-anchor="middle">';
+  ticks.forEach(k=>s+=`<text x="${X(k)}" y="${H-10}">${k}</text>`);
+  s+=`</g><g fill="var(--mu)" font-size="11" text-anchor="end"><text x="${L-6}" y="${Y(hi)+3}">${inr(hi)}</text><text x="${L-6}" y="${Y(lo)+3}">${inr(lo)}</text></g>`;
+  s+=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--fg)" stroke-dasharray="4 4" opacity=".5"/>`;
+  list.forEach((m,i)=>{
+    const c=single?'var(--fg)':COLORS[m.p.c];
+    s+=`<polyline fill="none" stroke="${c}" stroke-width="2.5" points="${xs.map(k=>X(k)+','+Y(m.cash(k)-m.opp)).join(' ')}"/>`;
+    if(isFinite(m.be)&&m.be>=50&&m.be<=xmax&&(single||list.length<=6)){
+      const b=Math.ceil(m.be), bc=single?'var(--pos)':c, ty=T+11+(single?0:i*14), flip=X(b)>W-120;
+      const mx=W<500?9:16, nm=m.p.name.length>mx?m.p.name.slice(0,mx-1)+'…':m.p.name, lbl=single?`breakeven ${b}`:`${esc(nm)} (${b})`;
+      s+=`<line x1="${X(b)}" x2="${X(b)}" y1="${T}" y2="${H-B}" stroke="${bc}" stroke-dasharray="3 3"/><text x="${flip?X(b)-4:X(b)+4}" y="${ty}" text-anchor="${flip?'end':'start'}" font-size="11" fill="${bc}" font-weight="600" stroke="var(--card)" stroke-width="3" paint-order="stroke">${lbl}</text>`}
+    const rx=Math.max(50,Math.min(xmax,m.run));
+    s+=`<circle cx="${X(rx)}" cy="${Y(m.econ)}" r="6" fill="${c}" stroke="var(--card)" stroke-width="2"/>`;
+  });
+  return s;
+}
+
+function drawChart(id,list,single){
+  const el=$(id), W=Math.max(300,Math.round((el.parentElement.clientWidth||680)-40)), H=Math.round(Math.min(340,Math.max(210,W*0.34)));
+  el.setAttribute('viewBox',`0 0 ${W} ${H}`); el.innerHTML=chartSVG(list,W,H,single);
+}
+let rzT; window.addEventListener('resize',()=>{clearTimeout(rzT); rzT=setTimeout(render,150)});
+let swOpen=false;
+function renderChips(){
+  const rows=vehicles.map((v,i)=>`<div class="vr ${i===act?'on':''}"><button class="vpick" onclick="pick(${i})"><span class="g">${i===act?'✓':''}</span><span class="dot" style="background:${COLORS[v.c]}"></span><span class="vn">${esc(v.name||'Untitled')}</span></button><button class="ib2" onclick="swMove(${i},-1)" ${i===0?'disabled':''} aria-label="Move ${esc(v.name)} up" title="Move up">▲</button><button class="ib2" onclick="swMove(${i},1)" ${i===vehicles.length-1?'disabled':''} aria-label="Move ${esc(v.name)} down" title="Move down">▼</button><button class="ib2 x" onclick="swDel(${i})" ${vehicles.length<2?'disabled':''} aria-label="Delete ${esc(v.name)}" title="Delete">✕</button></div>`).join('');
+  $('chips').innerHTML=`<div class="dd"><div class="vsel ${swOpen?'open':''}"><button class="va" type="button" onclick="swStep(-1)" ${act===0?'disabled':''} aria-label="Previous vehicle" title="Previous vehicle">‹</button><button class="sw" type="button" onclick="swToggle()" aria-expanded="${swOpen}"><span class="dot" style="background:${COLORS[vehicles[act].c]}"></span><b>${esc(vehicles[act].name||'Untitled')}</b><span class="mu text-xs">${act+1} of ${vehicles.length}</span><span class="car">▾</span></button><button class="va" type="button" onclick="swStep(1)" ${act===vehicles.length-1?'disabled':''} aria-label="Next vehicle" title="Next vehicle">›</button></div>
+    <div class="menu" ${swOpen?'':'hidden'}><div class="mh">Vehicles</div>${rows}<div class="sep"></div><button class="mi" onclick="dupVehicle()" ${vehicles.length>=MAXV?'disabled':''}>＋&nbsp; ${vehicles.length>=MAXV?'Copy as new (max '+MAXV+')':'Copy “'+esc(vehicles[act].name||'Untitled')+'” as new'}</button></div></div>`;
+}
+function swStep(d){const j=act+d; if(j<0||j>=vehicles.length)return; act=j; loadInputs(); render()}
+function swToggle(){swOpen=!swOpen; render()}
+function swMove(i,d){const j=i+d; if(j<0||j>=vehicles.length)return; [vehicles[i],vehicles[j]]=[vehicles[j],vehicles[i]]; if(act===i)act=j; else if(act===j)act=i; render()}
+function swDel(i){if(vehicles.length<2)return; vehicles.splice(i,1); if(act>i)act--; else if(act>=vehicles.length)act=vehicles.length-1; loadInputs(); render()}
+document.addEventListener('click',e=>{if(swOpen&&!e.composedPath().some(n=>n.id==='chips')){swOpen=false; render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSet(); if(swOpen){swOpen=false; render()}}});
+function loadInputs(){
+  const p=vehicles[act];
+  document.querySelectorAll('[data-k]').forEach(el=>{const v=p[el.id]; if(el.type==='checkbox')el.checked=v; else el.value=v});
+  buildLists();
+}
+function setPer(v){per=v==='y'?'y':'m'; render()}
+function pick(i){act=i; swOpen=false; loadInputs(); render()}
+function dupVehicle(){
+  if(vehicles.length>=MAXV)return;
+  const c=JSON.parse(JSON.stringify(vehicles[act])); c.name='Copy of '+c.name; {const used=new Set(vehicles.map(v=>v.c)); let k=0; while(used.has(k))k++; c.c=k}
+  vehicles.push(c); act=vehicles.length-1; swOpen=false; loadInputs(); render();
+}
+function viewSecs(){if(view==='sum'||view==='trip')return []; return [...document.querySelectorAll((view==='calc'?'#viewCalc':'#viewCmp')+' section[data-sec]')]}
+function setSec(sec,open){
+  sec.classList.toggle('closed',!open);
+  const b=sec.querySelector('.sec-chev'); if(b)b.setAttribute('aria-expanded',open);
+  secOpen[sec.dataset.sec]=open; syncAll();
+}
+const IC=p=>'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
+const ICON_MOON=IC('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'), ICON_SUN=IC('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>');
+const ICON_EXPORT=IC('<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'), ICON_IMPORT=IC('<path d="M12 15V3M7 8l5-5 5 5M5 21h14"/>'), ICON_RESET=IC('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>');
+const ICON_COLLAPSE=IC('<path d="M7 4l5 5 5-5M7 20l5-5 5 5"/>'), ICON_EXPAND=IC('<path d="M7 9l5-5 5 5M7 15l5 5 5-5"/>');
+function anyOpen(){return viewSecs().some(x=>!x.classList.contains('closed'))}
+function syncAll(){const ic=$('allIc'); if(!ic)return; const o=anyOpen(); ic.innerHTML=o?ICON_COLLAPSE:ICON_EXPAND; $('allLbl').textContent=o?'Collapse all sections':'Expand all sections'}
+function setToggle(){const m=$('setMenu'), o=m.hidden; m.hidden=!o; $('setBtn').setAttribute('aria-expanded',o)}
+function closeSet(){const m=$('setMenu'); if(m){m.hidden=true; $('setBtn').setAttribute('aria-expanded','false')}}
+document.addEventListener('click',e=>{if(!e.composedPath().some(n=>n.id==='setWrap'))closeSet()});
+function toggleAll(){const close=anyOpen(); viewSecs().forEach(x=>setSec(x,!close)); save()}
+function initSections(){
+  document.querySelectorAll('section[data-sec]').forEach(sec=>{
+    const head=sec.querySelector('.sec-head'), b=document.createElement('button');
+    /* keep the heading's own layout inside a wrapper so the round chevron can sit at the right end */
+    const keep=[], move=[]; head.className.split(/\s+/).forEach(c=>(/^(sec-head|mb-\d+)$/.test(c)?keep:move).push(c));
+    const w=document.createElement('div'); w.className=('sec-main '+move.join(' ')).trim();
+    while(head.firstChild)w.appendChild(head.firstChild);
+    head.className=keep.join(' '); head.appendChild(w);
+    b.type='button'; b.className='sec-chev'; b.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    b.setAttribute('aria-label','Collapse or expand section'); head.appendChild(b);
+    head.addEventListener('click',e=>{ if(e.target.closest('button:not(.sec-chev),input,select,a,.seg'))return; setSec(sec,sec.classList.contains('closed')); save(); });
+    setSec(sec,secOpen[sec.dataset.sec]!==false);
+  });
+}
+function setView(v){
+  view=v; syncAll(); $('viewCalc').classList.toggle('hide',v!=='calc'); $('viewCmp').classList.toggle('hide',v!=='cmp'); $('viewSum').classList.toggle('hide',v!=='sum'); $('allBtn').classList.toggle('hide',v==='sum'||v==='trip'); $('viewTrip').classList.toggle('hide',v!=='trip'); $('chips').classList.toggle('hide',v==='trip'); $('tripTools').classList.toggle('hide',v!=='trip'); $('mobBar').classList.toggle('hide',v!=='calc');
+  $('tabCalc').classList.toggle('on',v==='calc'); $('tabCmp').classList.toggle('on',v==='cmp'); $('tabSum').classList.toggle('on',v==='sum'); $('tabTrip').classList.toggle('on',v==='trip'); render();
+}
+
+
+/* ===== Summary card (v2): layout D, image-only share ===== */
+/* Watermark shows the domain it is hosted on plus a fixed display path. Nothing is shown when the file is opened locally. */
+const SHARE_PATH='/cab-economics';
+function siteAddr(){ return /^https?:$/.test(location.protocol)?location.host+SHARE_PATH:'' }
+const siteHTML=()=>{const a=siteAddr(); return a?`<span class="u"><b>${esc(a)}</b></span>`:''};
+const n0=n=>Math.round(n).toLocaleString('en-IN');
+function cardChart(m,hh){
+  const W=360,H=hh,L=40,R=8,T=8,B=16,xs=[]; for(let k=50;k<=300;k+=10)xs.push(k);
+  const ys=xs.map(k=>m.cash(k)-m.opp), lo=Math.min(0,...ys), hi=Math.max(0,...ys), pad=(hi-lo)*.12||1;
+  const X=k=>L+(k-50)/250*(W-L-R), Y=y=>T+(1-(y-(lo-pad))/((hi+pad)-(lo-pad)))*(H-T-B);
+  let s=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Inter,sans-serif">`;
+  [50,100,150,200,250,300].forEach(k=>s+=`<line x1="${X(k)}" x2="${X(k)}" y1="${T}" y2="${H-B}" stroke="var(--c-bd)"/><text x="${X(k)}" y="${H-4}" font-size="8.5" fill="var(--c-mu)" text-anchor="middle">${k}</text>`);
+  s+=`<text x="${L-5}" y="${Y(hi)+3}" font-size="8.5" fill="var(--c-mu)" text-anchor="end">${inr(hi)}</text><text x="${L-5}" y="${Y(lo)+3}" font-size="8.5" fill="var(--c-mu)" text-anchor="end">${inr(lo)}</text>`;
+  s+=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--c-fg)" stroke-dasharray="3 3" opacity=".45"/>`;
+  s+=`<polyline fill="none" stroke="var(--c-fg)" stroke-width="2.2" stroke-linejoin="round" points="${xs.map((k,i)=>X(k)+','+Y(ys[i])).join(' ')}"/>`;
+  if(isFinite(m.be)&&m.be>=50&&m.be<=300){const b=Math.ceil(m.be);s+=`<line x1="${X(b)}" x2="${X(b)}" y1="${T}" y2="${H-B}" stroke="var(--c-pos)" stroke-dasharray="3 3"/><text x="${X(b)+4}" y="${T+8}" font-size="8.5" fill="var(--c-pos)" font-weight="700">breakeven ${b}</text>`}
+  return s+`<circle cx="${X(Math.min(300,Math.max(50,m.run)))}" cy="${Y(m.econ)}" r="4.5" fill="var(--c-fg)" stroke="var(--c-bg)" stroke-width="2"/></svg>`;
+}
+function cardHTML(p,dk){
+  const m=calc(p), km=m.run*m.days, rev=km*p.tariff, fuelM=km*m.fuelKm, maintM=km*m.maintKm, profit=m.take>=0, pl=profit?'Profit':'Loss';
+  const costs=[['Fuel',fuelM,dk?'#fafafa':'#0a0a0a'],['Maintenance',maintM,dk?'#c4c4c4':'#525252'],['Loan EMI',m.emi,dk?'#737373':'#a3a3a3'],['Overheads',m.ops,dk?'#404040':'#d4d4d4']];
+  const tot=Math.max(rev,costs.reduce((a,c)=>a+c[1],0))||1;
+  const bar=costs.map(c=>`<i style="width:${c[1]/tot*100}%;background:${c[2]}"></i>`).join('')+(m.take>0?`<i style="width:${m.take/tot*100}%;background:var(--c-pos)"></i>`:'');
+  const mark=m.take<0?`<u style="position:absolute;left:${rev/tot*100}%;top:0;bottom:0;width:2px;background:var(--c-neg);box-shadow:0 0 0 1.5px var(--c-bg);text-decoration:none"></u>`:'';
+  const note=m.take<0?`<div class="k" style="margin-top:3px"><span class="neg">▎</span> Red line = what was earned. Costs went past it.</div>`:'';
+  const dI=inr(rev/m.days), mI=inr(rev), dP=sg(m.take/m.days), mP=sg(m.take);
+  const kmP=km||1, emiKm=m.emi/kmP, opsKm=m.ops/kmP, totalKm=m.fuelKm+m.maintKm+emiKm+opsKm, netKm=p.tariff-totalKm;
+  const ok=isFinite(m.be), emiYear=m.emi*Math.min(12,p.ten), u=p.fuelUnit;
+  const loanTxt=p.down>=100?'Paid fully in cash':`${p.rate}% interest · ${p.ten} months`;
+  return `<div class="ch"><div class="logo">🚕</div><div class="t"><b>${esc(p.name||'Untitled')}</b><span>Owner-driver · ${m.run} km/day · ${m.days} days a month</span></div><span class="pillx ${profit?'p':'n'}">${profit?'▲ Profit':'▼ Loss'}</span></div>
+  <div class="verdict"><div class="big ${cls(m.take)}">${mP}</div><p>${pl.toLowerCase()} each month after paying the loan and all running costs</p></div>
+  <div class="title">Monthly Breakdown</div>
+  <div class="bar">${bar}${mark}</div>${note}
+  <div class="leg">${costs.map(c=>`<div><i style="background:${c[2]}"></i>${c[0]}<b>${inr(c[1])}</b></div>`).join('')}${m.take>0?`<div><i style="background:var(--c-pos)"></i>Left for you<b class="pos">${inr(m.take)}</b></div>`:''}</div>
+  <div class="ledger"><div class="lr"><span>Income (Daily / Monthly)</span><b>${dI} / ${mI}</b></div><div class="lr"><span>${pl} (Daily / Monthly)</span><b class="${profit?'g':'r'}">${dP} / ${mP}</b></div></div>
+  <div class="g3"><div class="tile"><div class="k">Breakeven</div><span class="v">${ok?Math.ceil(m.be)+' km/day':'—'}</span></div><div class="tile"><div class="k">Downpayment back</div><span class="v">${m.pay?'Year '+m.pay:'> 6 yrs'}</span></div><div class="tile"><div class="k">6-year result</div><span class="v ${cls(m.total)}">${sg(m.total)}</span></div></div>
+  <div class="cols"><div class="col"><span class="lab">Vehicle &amp; Running Details</span>
+    <div class="it"><div class="k">Vehicle OnRoad Price</div><span class="v">${inr(p.price)}</span></div>
+    <div class="it"><div class="k">Downpayment</div><span class="v">${inr(m.downAmt)} (${p.down}%)</span></div>
+    <div class="it"><div class="k">Loan</div><span class="v">${loanTxt}</span></div>
+    <div class="it"><div class="k">EMI - Month / Year</div><span class="v">${inr(m.emi)} / ${inr(emiYear)}</span></div>
+    <div class="it"><div class="k">Days · Month / Year</div><span class="v">${m.days} / ${m.days*12} days</span></div>
+    <div class="it"><div class="k">Km Run · Day / Month / Year</div><span class="v">${m.run} / ${n0(km)} / ${n0(km*12)} km</span></div>
+    <div class="it"><div class="k">Fuel Price / Mileage</div><span class="v">₹${p.cng}/${u} · ${p.mil} km/${u}</span></div></div>
+  <div class="col"><span class="lab">Earnings &amp; Expenses Per Km</span>
+    <div class="it"><div class="k">Earnings Per Km</div><span class="v">₹${p.tariff.toFixed(2)}</span></div>
+    <div class="it"><div class="k">Fuel cost per km</div><span class="v">₹${m.fuelKm.toFixed(2)}</span></div>
+    <div class="it"><div class="k">Maintenance cost per km</div><span class="v">₹${m.maintKm.toFixed(2)}</span></div>
+    <div class="it"><div class="k">Loan EMI per km</div><span class="v">₹${emiKm.toFixed(2)}</span></div>
+    <div class="it"><div class="k">Overheads per km</div><span class="v">₹${opsKm.toFixed(2)}</span></div>
+    <div class="it"><div class="k">Total costs per km</div><span class="v">₹${totalKm.toFixed(2)}</span></div>
+    <div class="it"><div class="k">Net Profit per km</div><span class="v ${cls(netKm)}">${netKm<0?'−':''}₹${Math.abs(netKm).toFixed(2)}</span></div></div></div>
+  <div class="wm"><span>Made with <b>Cab Economics</b></span>${siteHTML()}</div>`;
+}
+function setCardTheme(t){cardTheme=t==='dark'?'dark':'light'; render()}
+function renderSummary(){
+  const dk=cardTheme==='dark', c=$('sumCard');
+  c.className='sc '+(dk?'dark':''); c.innerHTML=cardHTML(vehicles[act],dk);
+  $('sumWrap').style.zoom=Math.min(1,(innerWidth-32)/420);
+  $('ctL').classList.toggle('on',!dk); $('ctD').classList.toggle('on',dk);
+}
+let imgLib=null, fontP=null, fontOk=true;
+function loadImgLib(){
+  if(window.htmlToImage)return Promise.resolve();
+  return imgLib||(imgLib=new Promise((ok,no)=>{const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js'; s.onload=ok; s.onerror=()=>{imgLib=null;no(new Error('lib'))}; document.head.appendChild(s)}));
+}
+/* The image is drawn in a sealed SVG that cannot load web fonts, so Inter is fetched once and embedded as data */
+function toDataURL(url){return fetch(url).then(r=>{if(!r.ok)throw new Error('font');return r.blob()}).then(b=>new Promise((ok,no)=>{const f=new FileReader(); f.onload=()=>ok(f.result); f.onerror=no; f.readAsDataURL(b)}))}
+function loadFonts(){
+  return fontP||(fontP=fetch('https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap').then(r=>{if(!r.ok)throw new Error('css');return r.text()}).then(async css=>{
+    const blocks=[...css.matchAll(/\/\*\s*([\w-]+)\s*\*\/\s*(@font-face\s*\{[^}]*\})/g)].filter(m=>m[1]==='latin'||m[1]==='latin-ext');
+    const out=await Promise.all(blocks.map(async m=>{const u=(m[2].match(/url\(([^)]+)\)/)||[])[1]; return u?m[2].replace(/url\([^)]+\)/,'url('+await toDataURL(u.replace(/["']/g,''))+')'):''}));
+    const all=out.join('\n'); if(!all)throw new Error('nofont'); return all;
+  }).catch(e=>{fontP=null; throw e}));
+}
+async function cardBlob(kind){
+  await loadImgLib();
+  let fonts=null; try{fonts=await loadFonts(); fontOk=true}catch(e){fontOk=false}
+  const host=$('exportHost'); const tr=kind==='trip', dk=(tr?tpTheme:cardTheme)==='dark'; host.innerHTML=`<div class="sc ${tr?'tr ':''}ex ${dk?'dark':''}">${tr?tpCardHTML(dk):cardHTML(vehicles[act],dk)}</div>`;
+  const o={pixelRatio:1080/420,cacheBust:true}; if(fonts)o.fontEmbedCSS=fonts; else o.skipFonts=true;
+  try{ return await htmlToImage.toBlob(host.firstChild,o) } finally{ host.innerHTML='' }
+}
+const fontNote=()=>fontOk?'':' The font could not be loaded, so the text may look slightly different.';
+const cardName=()=>(vehicles[act].name||'cab').replace(/[^\w\-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40).toLowerCase()+'-summary.png';
+function sumMsg(t){$('sumMsg').textContent=t||''}
+function shToggle(){const m=$('shMenu'), o=m.hidden; m.hidden=!o; $('shBtn').setAttribute('aria-expanded',o)}
+function shClose(){const m=$('shMenu'); if(m){m.hidden=true; $('shBtn').setAttribute('aria-expanded','false')}}
+document.addEventListener('click',e=>{if(!e.composedPath().some(n=>n.id==='shWrap'))shClose()});
+if(!window.ClipboardItem)$('cpBtn').classList.add('hide');
+async function withBusy(fn){
+  const b=$('shBtn'); b.disabled=true; sumMsg('Preparing image…');
+  try{ await fn() }catch(e){ sumMsg('Could not create the image. Check your connection and try again.') }
+  finally{ b.disabled=false }
+}
+function saveBlob(b){const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=cardName(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function downloadCard(){ return withBusy(async()=>{ saveBlob(await cardBlob()); sumMsg('Image downloaded.'+fontNote()) }) }
+function shareCard(){ return withBusy(async()=>{
+  const blob=await cardBlob(), file=new File([blob],cardName(),{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:(vehicles[act].name||'Cab')+' · cab economics summary'}); sumMsg(''); return }
+    catch(e){ if(e&&e.name==='AbortError'){sumMsg(''); return} }
+  }
+  saveBlob(blob); sumMsg('Sharing is not available in this browser, so the image was downloaded instead.'+fontNote());
+}) }
+async function copyCard(){
+  if(!window.ClipboardItem||!navigator.clipboard||!navigator.clipboard.write){sumMsg('Copying images is not supported in this browser. Use Download image instead.'); return}
+  const b=$('shBtn'); b.disabled=true; sumMsg('Preparing image…');
+  try{ await navigator.clipboard.write([new ClipboardItem({'image/png':cardBlob()})]); sumMsg('Image copied. Paste it into your post or chat.'+fontNote()) }
+  catch(e){ sumMsg('Could not copy the image. Try Download image instead.') }
+  finally{ b.disabled=false }
+}
+
+/* ===== Share page to social apps: shares the clean page address (no # data), the network builds the preview from the page's tags ===== */
+const pageURL=()=>location.href.split('#')[0].split('?')[0];
+function shareTo(net){
+  if(!/^https?:$/.test(location.protocol)){(view==='trip'?tpMsg:sumMsg)('Sharing the page only works once it is hosted online.'); return}
+  const u=encodeURIComponent(pageURL()), c='Cab economics calculator: breakeven, profit and loan payback for your vehicle.', t=encodeURIComponent(c);
+  const L={whatsapp:`https://wa.me/?text=${t}%20${u}`,facebook:`https://www.facebook.com/sharer/sharer.php?u=${u}`,x:`https://twitter.com/intent/tweet?text=${t}&url=${u}`,
+    telegram:`https://t.me/share/url?url=${u}&text=${t}`,linkedin:`https://www.linkedin.com/sharing/share-offsite/?url=${u}`,
+    email:`mailto:?subject=${encodeURIComponent('Cab economics calculator')}&body=${t}%0A%0A${u}`};
+  if(net==='email'){location.href=L.email; return}
+  window.open(L[net],'_blank','noopener,noreferrer,width=620,height=640');
+}
+
+/* ===== Share link: the vehicle travels inside the link after the # (no server involved) ===== */
+function makeLink(){
+  const p=vehicles[act], m=calc(p);
+  const d={v:1,n:p.name,a:[p.price,p.down,p.rate,p.ten,p.resale,p.fd,p.tariff,p.days,p.fuelUnit,p.cng,p.mil,p.intv,p.svc,m.run],w:p.wear.map(w=>[w.n,w.c,w.km]),f:p.fixed.map(f=>[f.n,f.a])};
+  const b=btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return location.href.split('#')[0]+'#s='+b;
+}
+async function shareLink(){
+  const url=makeLink(), name=vehicles[act].name||'Cab';
+  if(navigator.share){
+    try{ await navigator.share({title:'Cab economics summary for '+name,text:'Cab economics summary for '+name,url}); sumMsg(''); return }
+    catch(e){ if(e&&e.name==='AbortError'){sumMsg(''); return} }
+  }
+  try{ await navigator.clipboard.writeText(url); sumMsg('Link copied.'+(location.protocol==='file:'?' It will only work for others once this page is hosted online.':'')) }
+  catch(e){ sumMsg('Could not copy automatically. Copy this link: '+url) }
+}
+function decodeShared(h){
+  const mt=/^#s=([\w-]+)$/.exec(h||''); if(!mt||mt[1].length>6000)return null;
+  try{
+    let b=mt[1].replace(/-/g,'+').replace(/_/g,'/'); while(b.length%4)b+='=';
+    const d=JSON.parse(decodeURIComponent(escape(atob(b)))); if(!d||d.v!==1||!Array.isArray(d.a))return null;
+    const a=d.a;
+    return clean({name:d.n,price:a[0],down:a[1],rate:a[2],ten:a[3],resale:a[4],fd:a[5],tariff:a[6],days:a[7],fuelUnit:a[8],cng:a[9],mil:a[10],intv:a[11],svc:a[12],ovOn:true,ov:a[13],
+      wear:(Array.isArray(d.w)?d.w:[]).map(w=>({n:(w||[])[0],c:(w||[])[1],km:(w||[])[2]})),fixed:(Array.isArray(d.f)?d.f:[]).map(f=>({n:(f||[])[0],a:(f||[])[1]}))});
+  }catch(e){return null}
+}
+const sameVeh=(x,y)=>{const f=v=>JSON.stringify(Object.assign({},v,{c:0})); return f(x)===f(y)};
+/* Opening a shared link adds it as a new vehicle (or selects the identical one already there). No questions asked; saved vehicles are never overwritten. */
+function importShared(){
+  const v=decodeShared(location.hash); if(!v)return false;
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  let i=vehicles.findIndex(x=>sameVeh(x,v));
+  if(i<0){
+    if(vehicles.length>=MAXV){alert('This shared vehicle could not be added because you already have '+MAXV+' vehicles. Delete one and open the link again.'); return false}
+    v.c=-1; vehicles.push(v); fixColors(vehicles); i=vehicles.length-1;
+  }
+  act=i; return true;
+}
+addEventListener('hashchange',()=>{ if(importShared()){ loadInputs(); setView('calc') } });
+
+
+/* ===== Trip Calc (v2d): independent quick calculator, own storage, not part of backups ===== */
+const TKEY='cab-quick-state', TF=['earned','km','price','mil','hrs','maint','other'];
+const tinr=n=>(n<0?'−':'')+'₹'+Math.round(Math.abs(n)).toLocaleString('en-IN');
+const tinr2=n=>(n<0?'−':'')+'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const tsg=n=>(n>=0?'+':'')+tinr(n), tcls=n=>n>=0?'pos':'neg';
+const tnum=v=>{const n=parseFloat(String(v).replace(/,/g,''));return isFinite(n)&&n>0?n:0};
+let TS={earned:'',km:'',price:'',mil:'',hrs:'',maint:'',other:'',unit:'litre'}, tpTheme='light';
+try{const r=JSON.parse(localStorage.getItem(TKEY)); if(r){TF.forEach(k=>{if(typeof r[k]==='string')TS[k]=r[k]}); if(r.theme==='dark')tpTheme='dark'; if(r.unit==='kg')TS.unit='kg'}}catch(e){}
+const tpSave=()=>{try{localStorage.setItem(TKEY,JSON.stringify(Object.assign({theme:tpTheme},TS)))}catch(e){}};
+function tpCalc(){
+  const e=tnum(TS.earned), km=tnum(TS.km), p=tnum(TS.price), mil=tnum(TS.mil), h=tnum(TS.hrs), mk=tnum(TS.maint), mt=mk*km, ot=tnum(TS.other);
+  const litres=mil?km/mil:0, fuel=litres*p, net=e-fuel-mt-ot;
+  return {e,km,p,mil,h,mt,ot,otherKm:km?ot/km:0,litres,fuel,net,
+    fuelKm:km&&mil?p/mil:0, maintKm:mk, netKm:km?net/km:0, earnKm:km?e/km:0, netHr:h?net/h:0, ready:e>0&&km>0&&mil>0};
+}
+
+const T_ICON_COPY='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+const T_ICON_OK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+function tpCardHTML(dk){
+  const c=tpCalc(), profit=c.net>=0;
+  if(!c.ready) return `<div class="ch"><div class="lg">🚕</div><div class="t"><b>Summary Trip/Day</b><span>Waiting for your numbers</span></div></div>
+    <div class="verdict" style="margin-top:120px"><div class="big" style="font-size:22px">Enter earned, km and mileage</div><p>The summary appears here as soon as those three are filled in.</p></div>
+    <div class="wm"><span>Made with <b>Cab Economics</b></span>${siteHTML()}</div>`;
+  const costs=[['Fuel',c.fuel,dk?'#fafafa':'#0a0a0a'],['Maintenance',c.mt,dk?'#737373':'#a3a3a3']]; if(c.ot>0)costs.push(['Other',c.ot,dk?'#404040':'#d4d4d4']);
+  const tot=Math.max(c.e,c.fuel+c.mt+c.ot)||1;
+  const bar=costs.map(x=>`<i style="width:${x[1]/tot*100}%;background:${x[2]}"></i>`).join('')+(c.net>0?`<i style="width:${c.net/tot*100}%;background:var(--c-pos)"></i>`:'');
+  const mark=c.net<0?`<u style="position:absolute;left:${c.e/tot*100}%;top:0;bottom:0;width:2px;background:var(--c-neg);box-shadow:0 0 0 1.5px var(--c-bg);text-decoration:none"></u>`:'';
+  const note=c.net<0?`<div class="k" style="margin-top:3px"><span class="neg">▎</span> Red line = what was earned. Costs went past it.</div>`:'';
+  const tm=c.h?`${+c.h.toFixed(2)} hrs`:'—';
+  return `<div class="ch"><div class="lg">🚕</div><div class="t"><b>Summary Trip/Day</b><span>${Math.round(c.km*10)/10} km${c.h?' · '+tm:''}</span></div><span class="pillx ${profit?'p':'n'}">${profit?'▲ Profit':'▼ Loss'}</span></div>
+  <div class="verdict"><div class="big ${tcls(c.net)}">${tsg(c.net)}</div><p>net earning after fuel, maintenance and other costs</p></div>
+  <div class="title">Where the money went</div>
+  <div class="bar2">${bar}${mark}</div>${note}
+  <div class="leg">${costs.map(x=>`<div><i style="background:${x[2]}"></i>${x[0]}<b>${tinr(x[1])}</b></div>`).join('')}${c.net>0?`<div><i style="background:var(--c-pos)"></i>Left for you<b class="pos">${tinr(c.net)}</b></div>`:''}</div>
+  <div class="ledger"><div class="lr"><span>Earned</span><b>${tinr(c.e)}</b></div><div class="lr"><span>Net earning</span><b class="${profit?'g':'r'}">${tsg(c.net)}</b></div></div>
+  <div class="g3"><div class="tile"><div class="k">Fuel used</div><span class="v">${+c.litres.toFixed(2)} ${TS.unit}</span></div><div class="tile"><div class="k">Net per km</div><span class="v ${tcls(c.netKm)}">${tinr2(c.netKm)}</span></div><div class="tile"><div class="k">Net per hour</div><span class="v ${c.h?tcls(c.netHr):''}">${c.h?tinr(c.netHr):'—'}</span></div></div>
+  <div class="cols"><div class="col"><span class="lab">Your inputs</span>
+    <div class="it"><div class="k">Distance</div><span class="v">${Math.round(c.km*10)/10} km</span></div>
+    <div class="it"><div class="k">Fuel price</div><span class="v">${tinr2(c.p)} per ${TS.unit}</span></div>
+    <div class="it"><div class="k">Mileage</div><span class="v">${c.mil} km per ${TS.unit}</span></div>
+    <div class="it"><div class="k">Time spent</div><span class="v">${tm}</span></div>
+    <div class="it"><div class="k">Maintenance total</div><span class="v">${tinr(c.mt)}</span></div>
+    <div class="it"><div class="k">Other expenses</div><span class="v">${tinr(c.ot)}</span></div></div>
+  <div class="col"><span class="lab">Expenses / Profit per km</span>
+    <div class="it"><div class="k">Earnings per km</div><span class="v">${tinr2(c.earnKm)}</span></div>
+    <div class="it"><div class="k">Fuel per km</div><span class="v">${tinr2(c.fuelKm)}</span></div>
+    <div class="it"><div class="k">Maintenance per km</div><span class="v">${tinr2(c.maintKm)}</span></div>
+    <div class="it"><div class="k">Other expenses per km</div><span class="v">${tinr2(c.otherKm)}</span></div>
+    <div class="it"><div class="k">Total Cost per km</div><span class="v">${tinr2(c.fuelKm+c.maintKm+c.otherKm)}</span></div>
+    <div class="it"><div class="k">Net Profit per km</div><span class="v ${tcls(c.netKm)}">${tinr2(c.netKm)}</span></div></div></div>
+  <div class="wm"><span>Made with <b>Cab Economics</b></span>${siteHTML()}</div>`;
+}
+
+function tpMarkdown(){
+  const c=tpCalc(); if(!c.ready) return '';
+  const hrs=c.h?+c.h.toFixed(2)+' hrs':'-';
+  return [
+    '## Quick Summary Trip/Day',
+    `**Net Profit: ${tsg(c.net)}**`,
+    '',
+    '### Summary',
+    `- Total Earnings: ${tinr(c.e)}`,
+    `- Fuel cost: ${tinr(c.fuel)}`,
+    `- Maintenance: ${tinr(c.mt)}`,
+    `- Other expenses: ${tinr(c.ot)}`,
+    `- Net earning: ${tsg(c.net)}`,
+    `- Fuel used: ${+c.litres.toFixed(2)} ${TS.unit}`,
+    `- Net per hour: ${c.h?tinr(c.netHr):'-'}`,
+    '',
+    '### Per km',
+    `- Earnings per km: ${tinr2(c.earnKm)}`,
+    `- Fuel cost per km: ${tinr2(c.fuelKm)}`,
+    `- Maintenance cost per km: ${tinr2(c.maintKm)}`,
+    `- Other expenses per km: ${tinr2(c.otherKm)}`,
+    `- Total cost per km: ${tinr2(c.fuelKm+c.maintKm+c.otherKm)}`,
+    `- Net profit per km: ${tinr2(c.netKm)}`,
+    '',
+    '### Inputs',
+    `- Distance: ${Math.round(c.km*10)/10} km`,
+    `- Fuel price: ${tinr2(c.p)} per ${TS.unit}`,
+    `- Mileage: ${c.mil} km per ${TS.unit}`,
+    `- Time spent: ${hrs}`,
+    `- Maintenance rate: ${tinr2(c.maintKm)}/km`,
+    `- Other expenses (total): ${tinr(c.ot)}`,
+    '',
+    (/^https?:$/.test(location.protocol)?'[Made with Cab Economics]('+pageURL()+')':'Made with Cab Economics')
+  ].join('\n');
+}
+
+function tpRender(){
+  const dk=tpTheme==='dark', c=$('tpCard');
+  c.className='sc tr '+(dk?'dark':''); c.innerHTML=tpCardHTML(dk);
+  const m=tpMarkdown(); if($('tpMd').value!==m)$('tpMd').value=m;
+  {const w=$('tpCardBox').clientWidth; if(w>0)$('tpCardWrap').style.zoom=Math.min(1,w/420)}
+  $('tpCtL').classList.toggle('on',!dk); $('tpCtD').classList.toggle('on',dk);
+}
+const TOK='cab-trip-open', TO={in:true,tx:true,cd:true};
+try{Object.assign(TO,JSON.parse(localStorage.getItem(TOK))||{})}catch(e){}
+document.querySelectorAll('#viewTrip .tp-panel').forEach(p=>{
+  const id=p.dataset.tp, b=p.querySelector('.tp-tog'), name=p.querySelector('h2').textContent;
+  const set=o=>{p.classList.toggle('closed',!o); b.setAttribute('aria-expanded',o); b.setAttribute('aria-label',(o?'Collapse ':'Expand ')+name); TO[id]=o; try{localStorage.setItem(TOK,JSON.stringify(TO))}catch(e){}};
+  set(TO[id]!==false); b.onclick=()=>{set(p.classList.contains('closed')); tpRender()};
+});
+TF.forEach(k=>{const el=$('tp_'+k); el.value=TS[k]; el.addEventListener('input',()=>{TS[k]=el.value; tpSave(); tpRender()})});
+function tpUnitLabels(){
+  document.querySelector('label[for=tp_price]').textContent='Fuel price (per '+TS.unit+')';
+  document.querySelector('label[for=tp_mil]').textContent='Mileage (km per '+TS.unit+')';
+}
+$('tp_unit').value=TS.unit; tpUnitLabels();
+$('tp_unit').addEventListener('change',()=>{TS.unit=$('tp_unit').value==='kg'?'kg':'litre'; tpUnitLabels(); tpSave(); tpRender()});
+$('tpCtL').onclick=()=>{tpTheme='light'; tpSave(); tpRender()};
+$('tpCtD').onclick=()=>{tpTheme='dark'; tpSave(); tpRender()};
+addEventListener('resize',()=>{if(view==='trip')tpRender()});
+let tpArm=null;
+$('tpClear').onclick=function(){
+  if(tpArm){clearTimeout(tpArm); tpArm=null; this.textContent='Clear all'; TF.forEach(k=>{TS[k]=''; $('tp_'+k).value=''}); tpSave(); tpRender(); return}
+  this.textContent='Click again to clear all'; tpArm=setTimeout(()=>{tpArm=null; this.textContent='Clear all'},3000);
+};
+const tpLbl=ic=>'<span style="display:inline-flex">'+ic+'</span>';
+function tpCpReset(){const b=$('tpCpTxt'); b.innerHTML=T_ICON_COPY; b.setAttribute('data-tip','Copy')}
+function tpNote(t){$('tpCpMsg').textContent=t||''}
+async function tpCopyText(){
+  const t=tpMarkdown(), box=$('tpMd'); tpNote('');
+  if(!t){tpMsg('Fill in earned, km and mileage first.'); return false}
+  let ok=false;
+  if(navigator.clipboard&&navigator.clipboard.writeText){try{await navigator.clipboard.writeText(t); ok=true}catch(e){}}
+  if(!ok){try{box.focus(); box.select(); box.setSelectionRange(0,box.value.length); ok=document.execCommand('copy')}catch(e){}}
+  if(ok){tpNote('Copied'); $('tpCpTxt').innerHTML=T_ICON_OK; $('tpCpTxt').setAttribute('data-tip','Copied'); setTimeout(()=>{tpCpReset(); tpNote('')},1600); tpMsg(''); return true}
+  box.focus(); box.select(); tpMsg('Blocked here. Text is selected, press Ctrl+C.'); return false;
+}
+$('tpCpTxt').onclick=tpCopyText; tpCpReset();
+function tpMsg(t){$('tpMsg').textContent=t||''}
+function tpShToggle(){const m=$('tpShMenu'), o=m.hidden; m.hidden=!o; $('tpShBtn').setAttribute('aria-expanded',o)}
+function tpShClose(){$('tpShMenu').hidden=true; $('tpShBtn').setAttribute('aria-expanded','false')}
+$('tpShBtn').onclick=tpShToggle;
+document.addEventListener('click',e=>{if(!e.composedPath().some(n=>n.id==='tpShWrap'))tpShClose()});
+if(!window.ClipboardItem)$('tpCpBtn').classList.add('hide');
+async function tpBusy(fn){
+  const b=$('tpShBtn'); b.disabled=true; tpMsg('Preparing image…');
+  try{await fn()}catch(e){tpMsg('Could not create the image. Check your connection and try again.')}
+  finally{b.disabled=false}
+}
+const tpFile='cab-trip-summary.png';
+function tpSaveBlob(b){const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=tpFile; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+const tpDownload=()=>tpBusy(async()=>{tpSaveBlob(await cardBlob('trip')); tpMsg('Image downloaded.'+fontNote())});
+const tpShare=()=>tpBusy(async()=>{
+  const blob=await cardBlob('trip'), file=new File([blob],tpFile,{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:'Cab trip summary'}); tpMsg(''); return}
+    catch(e){if(e&&e.name==='AbortError'){tpMsg(''); return}}
+  }
+  tpSaveBlob(blob); tpMsg('Sharing is not available in this browser, so the image was downloaded instead.'+fontNote());
+});
+async function tpCopyImg(){
+  if(!window.ClipboardItem||!navigator.clipboard||!navigator.clipboard.write){tpMsg('Copying images is not supported in this browser. Use Download image instead.'); return}
+  const b=$('tpShBtn'); b.disabled=true; tpMsg('Preparing image…');
+  try{await navigator.clipboard.write([new ClipboardItem({'image/png':cardBlob('trip')})]); tpMsg('Image copied. Paste it into your post or chat.'+fontNote())}
+  catch(e){tpMsg('Could not copy the image. Try Download image instead.')}
+  finally{b.disabled=false}
+}
+
+/* ===== Guide panel + one-time "New here?" note ===== */
+const GK='cab-guide-seen'; let guideReturn=null;
+function guideSeen(){try{localStorage.setItem(GK,'1')}catch(e){} $('guideNote').hidden=true}
+function openGuide(){
+  closeSet(); guideSeen(); guideReturn=document.activeElement;
+  $('guideBack').classList.add('on'); const p=$('guide'); p.classList.add('on'); p.setAttribute('aria-hidden','false');
+  document.documentElement.style.overflow='hidden'; $('guideClose').focus();
+}
+function closeGuide(){
+  $('guideBack').classList.remove('on'); const p=$('guide'); p.classList.remove('on'); p.setAttribute('aria-hidden','true');
+  document.documentElement.style.overflow=''; (guideReturn||$('guideBtn')).focus();
+}
+document.addEventListener('keydown',e=>{
+  const p=$('guide'); if(!p.classList.contains('on'))return;
+  if(e.key==='Escape'){closeGuide(); return}
+  if(e.key==='Tab'){const f=[...p.querySelectorAll('button,a[href]')].filter(x=>!x.disabled); if(!f.length)return;
+    const a=f[0], z=f[f.length-1]; if(e.shiftKey&&document.activeElement===a){e.preventDefault(); z.focus()} else if(!e.shiftKey&&document.activeElement===z){e.preventDefault(); a.focus()}}
+});
+{let seen=true; try{seen=localStorage.getItem(GK)==='1'}catch(e){} if(!seen)$('guideNote').hidden=false}
+
+function render(){ renderView(); save(); }
+function renderView(){
+  renderChips();
+  if(view==='sum'){renderSummary(); return}
+  if(view==='trip'){tpRender(); return}
+  const p=vehicles[act];
+  if(view==='calc'){
+    const m=calc(p), u=p.fuelUnit, beOk=isFinite(m.be), beR=Math.ceil(m.be);
+    $('downAmt').textContent=inr(m.downAmt);
+    $('fuelPriceLbl').textContent=`Fuel price (₹/${u})`; $('milLbl').textContent=`Mileage (km/${u})`;
+    $('fuelKm').textContent='₹'+m.fuelKm.toFixed(2);
+    $('svcKm').textContent='₹'+m.svcKm.toFixed(2)+' / km';
+    p.wear.forEach((w,i)=>{const e=$('ws'+i); if(e)e.textContent='₹'+(w.c/(w.km||1)).toFixed(2)+'/km'});
+    p.fixed.forEach((f,i)=>{const e=$('fs'+i); if(e)e.textContent='₹'+Math.round(f.a/12)+'/mo'});
+    $('runLbl').textContent=m.run+' km/day'; $('runLblM').textContent=m.run+' km/day';
+    $('runNote').textContent=p.ovOn?`${p.name} uses its own distance — the slider affects vehicles without one`:'Shared across all vehicles';
+    $('vName').textContent=p.name;
+    $('beBig').textContent=beOk?beR+' km/day':'Not reachable'; $('mBe').textContent=beOk?beR+' km':'—';
+    $('beNote').textContent=beOk?(m.run>=beR?`You're ${m.run-beR} km above breakeven`:`You're ${beR-m.run} km below breakeven`)+' · covers EMI, overheads & lost FD interest':'Revenue per km is below running cost per km';
+    $('rTake').textContent=sg(m.take); $('rTake').className='text-base '+cls(m.take);
+    $('mTake').textContent=sg(m.take); $('mTake').className='font-extrabold text-lg '+cls(m.take);
+    $('rEcon').textContent=sg(m.econ); $('rEcon').className=cls(m.econ);
+    $('rEmi').textContent=inr(m.emi); $('rVar').textContent='₹'+m.varKm.toFixed(2);
+    $('rPay').textContent=m.pay?'Year '+m.pay:'Not within 6 years';
+    $('rTotal').textContent=sg(m.total); $('rTotal').className=cls(m.total);
+    const sm=(id,t)=>{const e=$('sum-'+id); if(e)e.textContent=t};
+    sm('s1',`OnRoad ${inr(p.price)} · ${p.price-m.downAmt>0?`Loan ${inr(p.price-m.downAmt)} @ ${p.rate}% · EMI ${inr(m.emi)}`:'No loan'}`);
+    sm('s2',`Income ₹${(+p.tariff).toFixed(2)}/km · Fuel ₹${m.fuelKm.toFixed(2)}/km · ${m.days} days/month`);
+    sm('s3',`Maintenance ₹${m.maintKm.toFixed(2)}/km · Overheads ${inr(m.opsYr)}/yr`);
+    sm('s4',beOk?`Breakeven ${beR} km/day · You: ${m.run} km/day`:'Breakeven not reachable at this tariff');
+    sm('s5',`Planned ${m.run} km/day · Take-home ${sg(m.take)}/month`);
+    sm('s6',`6-yr net ${sg(m.total)} · Payback ${m.pay?'Year '+m.pay:'not within 6 years'}`);
+    $('years').innerHTML=m.yrs.map(r=>`<tr${r.y===6?' class="hl"':''}><td>Year ${r.y}${r.emiM===0?' <span class="pill">No EMI</span>':''}${r.y===6?' <span class="pill">+ resale</span>':''}</td><td>${Math.round(r.yKm).toLocaleString('en-IN')} km</td><td>${inr(r.rev)}</td><td>${inr(r.fuel)}</td><td>${inr(r.mnt)}</td><td>${inr(m.opsYr)}</td><td>${inr(r.emiY)}</td><td class="${cls(r.cf)}">${sg(r.cf)}</td><td class="${cls(r.cum)}">${sg(r.cum)}</td></tr>`).join('');
+    const T=m.yrs.reduce((a,r)=>({yKm:a.yKm+r.yKm,rev:a.rev+r.rev,fuel:a.fuel+r.fuel,mnt:a.mnt+r.mnt,emiY:a.emiY+r.emiY,cf:a.cf+r.cf}),{yKm:0,rev:0,fuel:0,mnt:0,emiY:0,cf:0});
+    $('years').insertAdjacentHTML('beforeend',`<tr class="hl tot"><td>Total · 6 years</td><td>${Math.round(T.yKm).toLocaleString('en-IN')} km</td><td>${inr(T.rev)}</td><td>${inr(T.fuel)}</td><td>${inr(T.mnt)}</td><td>${inr(m.opsYr*6)}</td><td>${inr(T.emiY)}</td><td class="${cls(T.cf)}">${sg(T.cf)}</td><td>—</td></tr>`);
+    $('yearsNote').innerHTML=`Total cash flow <b>${sg(T.cf)}</b> − downpayment <b>${inr(m.downAmt)}</b> + resale <b>${inr(p.resale)}</b> = 6-year net <b class="${cls(m.total)}">${sg(m.total)}</b>`;
+    const set=[...new Set([50,100,150,200,250,m.run,...(beOk?[beR]:[])])].sort((a,b)=>a-b);
+    $('matrix').innerHTML=set.map(km=>{
+      const mk=km*m.days, rev=mk*p.tariff, cost=mk*m.varKm+m.ops+m.emi, t=rev-cost;
+      const tag=(km===beR&&beOk?' <span class="pill inv">Breakeven</span>':'')+(km===m.run?' <span class="pill">Planned</span>':'');
+      return `<tr${km===m.run||(km===beR&&beOk)?' class="hl"':''}><td>${km} km${tag}</td><td>${mk.toLocaleString('en-IN')}</td><td>${inr(rev)}</td><td>${inr(cost)}</td><td class="${cls(t)}">${sg(t)}</td><td>${sg(t/m.days)}</td></tr>`;
+    }).join('');
+    drawChart('chart',[m],true);
+  } else {
+    const ms=vehicles.map((v,i)=>{const m=calc(v);m.idx=i;return m});
+    $('runLblC').textContent=G+' km/day';
+    const P=per==='y', pl=P?'year':'month', Y=m=>m.yrs[0];
+    $('perM').classList.toggle('on',!P); $('perY').classList.toggle('on',P);
+    $('cmpSub').textContent='Best value in each row is highlighted'; $('cmpNote').textContent=P?'Yearly figures are Year 1 of the 6-year outlook.':'';
+    const rev=m=>P?Y(m).rev:m.run*m.days*m.p.tariff, emi=m=>P?Y(m).emiY:m.emi,
+      fuel=m=>P?Y(m).fuel:m.run*m.days*m.fuelKm, mnt=m=>P?Y(m).mnt:m.run*m.days*m.maintKm,
+      ovh=m=>P?m.opsYr:m.ops, take=m=>P?Y(m).cf:m.take, lost=m=>P?m.opp*12:m.opp, net=m=>take(m)-lost(m);
+    const GROUPS=[
+      ['Purchase',[
+        ['On-road price',m=>inr(m.p.price),m=>m.p.price,'lo'],
+        ['Downpayment',m=>inr(m.downAmt),m=>m.downAmt,'lo']]],
+      ['Usage · per '+pl,[
+        ['Daily run used',m=>m.run+' km'+(m.p.ovOn?' (own)':''),null,null],
+        ['Days run',m=>(P?m.days*12:m.days)+' days',null,null],
+        ['Km run',m=>Math.round(P?Y(m).yKm:m.run*m.days).toLocaleString('en-IN')+' km',null,null]]],
+      ['Per-km economics',[
+        ['Net revenue / km',m=>'₹'+m.p.tariff.toFixed(2),m=>m.p.tariff,'hi'],
+        ['Running cost / km (fuel)',m=>'₹'+m.fuelKm.toFixed(2),m=>m.fuelKm,'lo'],
+        ['Running cost / km (maint.)',m=>'₹'+m.maintKm.toFixed(2),m=>m.maintKm,'lo'],
+        ['Margin / km',m=>'₹'+m.margin.toFixed(2),m=>m.margin,'hi']]],
+      ['Income & costs · per '+pl,[
+        ['Revenue',m=>inr(rev(m)),rev,'hi'],
+        ['EMI',m=>inr(emi(m)),emi,'lo'],
+        ['Fuel cost',m=>inr(fuel(m)),fuel,'lo'],
+        ['Maintenance',m=>inr(mnt(m)),mnt,'lo'],
+        ['Overheads',m=>inr(ovh(m)),ovh,'lo']]],
+      ['Profit · per '+pl,[
+        ['Take-home',m=>sg(take(m)),take,'hi'],
+        ['Lost FD interest',m=>inr(lost(m)),lost,'lo'],
+        ['Net profit / loss',m=>sg(net(m)),net,'hi']]],
+      ['Results',[
+        ['Breakeven',m=>isFinite(m.be)?Math.ceil(m.be)+' km/day':'—',m=>m.be,'lo'],
+        ['Payback',m=>m.pay?'Year '+m.pay:'> 6 years',m=>m.pay||Infinity,'lo'],
+        ['6-yr net (+ resale)',m=>sg(m.total),m=>m.total,'hi']]]
+    ];
+    let h='<thead><tr><th></th>'+ms.map(m=>`<th><span class="dot" style="background:${COLORS[m.p.c]}"></span> ${esc(m.p.name)}</th>`).join('')+'</tr></thead><tbody>';
+    GROUPS.forEach(([title,rows])=>{
+      h+=`<tr class="grp"><td colspan="${ms.length+1}"><span class="gt">${title}</span></td></tr>`;
+      rows.forEach(([lbl,f,val,dir])=>{
+        let best=null;
+        if(val&&dir){const vs=ms.map(val).filter(x=>isFinite(x)); if(vs.length>1&&new Set(vs).size>1)best=dir==='hi'?Math.max(...vs):Math.min(...vs)}
+        h+=`<tr><td>${lbl}</td>`+ms.map(m=>`<td class="${best!==null&&val(m)===best?'best':''}">${f(m)}</td>`).join('')+'</tr>';
+      });
+    });
+    $('cmpTable').innerHTML=h+'</tbody>';
+    $('cmpChartSub').textContent='After EMI, overheads and lost FD interest'+(ms.length<=6?' · number in brackets = breakeven km/day':' · breakeven values are in the table above');
+    $('sum-c1').textContent=`${ms.length} vehicles · ${P?'yearly':'monthly'}`;
+    $('sum-c2').textContent=`Breakeven: `+ms.map(m=>(isFinite(m.be)?Math.ceil(m.be):'—')).join(' · ')+' km/day';
+    $('legend').innerHTML=ms.map(m=>`<span class="flex items-center gap-1.5"><span class="dot" style="background:${COLORS[m.p.c]}"></span>${esc(m.p.name)}</span>`).join('');
+    drawChart('chartC',ms,false);
+  }
+}
+
+document.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('input',()=>{
+  const p=vehicles[act];
+  p[el.id]=el.type==='checkbox'?el.checked:(el.type==='number'?(parseFloat(el.value)||0):el.value);
+  render();
+}));
+['run','runM','runC'].forEach(id=>$(id).addEventListener('input',e=>{G=+e.target.value;['run','runM','runC'].forEach(x=>$(x).value=G);render()}));
+let savedTheme='light'; try{savedTheme=localStorage.getItem('hub-theme')||'light'}catch(e){}
+applyTheme(savedTheme);
+document.querySelectorAll('.help').forEach(el=>{
+  const place=()=>el.classList.toggle('flip',el.getBoundingClientRect().left+el.querySelector('.tip').offsetWidth>innerWidth-8);
+  ['mouseenter','focusin'].forEach(ev=>el.addEventListener(ev,place)); addEventListener('resize',place); place();
+});
+$('icExp').innerHTML=ICON_EXPORT; $('icImp').innerHTML=ICON_IMPORT; $('icRst').innerHTML=ICON_RESET;
+importShared(); initSections(); syncRuns(); loadInputs(); render();
+</script>
+</body>
+</html>
