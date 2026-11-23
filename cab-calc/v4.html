@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://YOUR-DOMAIN/path/cab-economics-preview.png">
 <meta property="og:url" content="https://YOUR-DOMAIN/cab-economics">
 -->
-<!-- v2o: Calculator sections show a description when open and a live data line when collapsed (Plain text 2, under the title). v2n: Summary card Option A (EMI / overheads per km), no chart, shorter labels. v2m: Summary card columns rearranged; Trip Calc text/card tweaks. v2l: Trip Calc fuel unit dropdown, renamed text lines and per-km rows. v2k: Trip Calc Copy button is icon-only with hover tooltip. v2j: Guide button is icon-only with a hover tooltip. v2i: numbered titles (1.), Guide panel + first-visit note, source URL in Trip Calc text. v2h: markdown heading renamed. v2g: renamed Trip Calc section titles and card headline. v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
+<!-- v2p: Running Costs subsections show a total in every header; + Add item moved to a footer with item count (option B). v2o: Calculator sections show a description when open and a live data line when collapsed (Plain text 2, under the title). v2n: Summary card Option A (EMI / overheads per km), no chart, shorter labels. v2m: Summary card columns rearranged; Trip Calc text/card tweaks. v2l: Trip Calc fuel unit dropdown, renamed text lines and per-km rows. v2k: Trip Calc Copy button is icon-only with hover tooltip. v2j: Guide button is icon-only with a hover tooltip. v2i: numbered titles (1.), Guide panel + first-visit note, source URL in Trip Calc text. v2h: markdown heading renamed. v2g: renamed Trip Calc section titles and card headline. v2f: round chevron buttons on Calculator/Compare sections, Trip Calc collapse fix. v2e: Trip Calc layout (3 equal sections, collapsible on mobile, controls in tab row). v2d: Trip Calc tab (quick calculator). v2c: Share page to (WhatsApp, Facebook, X, Telegram, LinkedIn, Email). v2b: card line-height fix, watermark = domain/cab-economics. v2a: Summary tab (layout D card), share link / share image / copy / download -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -340,19 +340,21 @@
       <div class="sec-head flex justify-between items-center mb-3"><div><h2 class="font-semibold text-sm">3. Running Costs<span class="sec-sum" id="sum-s3"></span></h2><p class="sec-desc">Maintenance per km and fixed yearly overheads</p></div></div>
       <div class="space-y-3">
         <details class="border bd rounded-xl" open>
-          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Routine servicing</span><span class="flex items-center gap-3"><span id="svcKm" class="mu"></span><span class="chev mu">▾</span></span></summary>
+          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Routine servicing</span><span class="flex items-center gap-3"><span id="svcKm" class="font-semibold whitespace-nowrap"></span><span class="chev mu">▾</span></span></summary>
           <div class="p-4 grid grid-cols-2 gap-4 text-xs">
             <div><div class="mu mb-1">Service interval (km)</div><input id="intv" data-k class="inp !w-full" type="number" step="500"></div>
             <div><div class="mu mb-1">Cost per service (₹)</div><input id="svc" data-k class="inp !w-full" type="number" step="500"></div>
           </div>
         </details>
         <details class="border bd rounded-xl" open>
-          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Wear & replacements <span class="mu font-normal">(km-based)</span></span><span class="flex items-center gap-3"><button class="btn !py-1" onclick="addWear(event)">+ Add</button><span class="chev mu">▾</span></span></summary>
+          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Wear & replacements <span class="mu font-normal">(km-based)</span></span><span class="flex items-center gap-3"><span id="wearTot" class="font-semibold whitespace-nowrap"></span><span class="chev mu">▾</span></span></summary>
           <div id="wearList" class="p-3 space-y-2"></div>
+          <div class="flex items-center justify-between gap-3 px-4 pb-3 text-xs"><span id="wearCnt" class="mu"></span><button class="btn !py-1" onclick="addWear(event)">+ Add item</button></div>
         </details>
         <details class="border bd rounded-xl" open>
-          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Fixed overheads <span class="mu font-normal">(time-based: insurance, permits, GPS…)</span></span><span class="flex items-center gap-3"><button class="btn !py-1" onclick="addFixed(event)">+ Add</button><span class="chev mu">▾</span></span></summary>
+          <summary class="flex items-center justify-between px-4 py-3 text-xs font-semibold soft rounded-xl"><span>Fixed overheads <span class="mu font-normal">(time-based: insurance, permits, GPS…)</span></span><span class="flex items-center gap-3"><span id="fixTot" class="font-semibold whitespace-nowrap"></span><span class="chev mu">▾</span></span></summary>
           <div id="fixedList" class="p-3 space-y-2"></div>
+          <div class="flex items-center justify-between gap-3 px-4 pb-3 text-xs"><span id="fixCnt" class="mu"></span><button class="btn !py-1" onclick="addFixed(event)">+ Add item</button></div>
         </details>
       </div>
     </section>
@@ -615,8 +617,8 @@ function resetAll(){ if(!confirm('Reset to the sample vehicles? Your changes wil
 function buildLists(){
   const p=vehicles[act];
   const arrows=(i,n,mv,del)=>`<span class="wbt"><button class="mu px-2 py-1 text-sm ${i===0?'opacity-30 pointer-events-none':''}" onclick="${mv}(${i},-1)" title="Move up">▲</button><button class="mu px-2 py-1 text-sm ${i===n-1?'opacity-30 pointer-events-none':''}" onclick="${mv}(${i},1)" title="Move down">▼</button><button class="mu px-2 py-1 text-sm" onclick="${del}(${i})" title="Remove">✕</button></span>`;
-  $('wearList').innerHTML=p.wear.length?p.wear.map((w,i)=>`<div class="wr"><div class="wr1"><input class="inp wnm" type="text" value="${esc(w.n)}" oninput="editWear(${i},'n',this.value)" aria-label="Item name">${arrows(i,p.wear.length,'moveWear','delWear')}</div><div class="wr2"><span class="mu">₹</span><input class="inp wn" type="number" value="${w.c}" oninput="editWear(${i},'c',this.value)" aria-label="Cost"><span class="mu">every</span><input class="inp wn" type="number" value="${w.km}" oninput="editWear(${i},'km',this.value)" aria-label="Interval in km"><span class="mu">km</span><span id="ws${i}" class="wsub"></span></div></div>`).join(''):'<div class="text-xs mu p-2">No items yet — use + Add</div>';
-  $('fixedList').innerHTML=p.fixed.length?p.fixed.map((f,i)=>`<div class="wr"><div class="wr1"><input class="inp wnm" type="text" value="${esc(f.n)}" oninput="editFixed(${i},'n',this.value)" aria-label="Item name">${arrows(i,p.fixed.length,'moveFixed','delFixed')}</div><div class="wr2"><span class="mu">₹</span><input class="inp wn" type="number" value="${f.a}" oninput="editFixed(${i},'a',this.value)" aria-label="Cost per year"><span class="mu">per year</span><span id="fs${i}" class="wsub"></span></div></div>`).join(''):'<div class="text-xs mu p-2">No items yet — use + Add</div>';
+  $('wearList').innerHTML=p.wear.length?p.wear.map((w,i)=>`<div class="wr"><div class="wr1"><input class="inp wnm" type="text" value="${esc(w.n)}" oninput="editWear(${i},'n',this.value)" aria-label="Item name">${arrows(i,p.wear.length,'moveWear','delWear')}</div><div class="wr2"><span class="mu">₹</span><input class="inp wn" type="number" value="${w.c}" oninput="editWear(${i},'c',this.value)" aria-label="Cost"><span class="mu">every</span><input class="inp wn" type="number" value="${w.km}" oninput="editWear(${i},'km',this.value)" aria-label="Interval in km"><span class="mu">km</span><span id="ws${i}" class="wsub"></span></div></div>`).join(''):'<div class="text-xs mu p-2">No items yet — use + Add item</div>';
+  $('fixedList').innerHTML=p.fixed.length?p.fixed.map((f,i)=>`<div class="wr"><div class="wr1"><input class="inp wnm" type="text" value="${esc(f.n)}" oninput="editFixed(${i},'n',this.value)" aria-label="Item name">${arrows(i,p.fixed.length,'moveFixed','delFixed')}</div><div class="wr2"><span class="mu">₹</span><input class="inp wn" type="number" value="${f.a}" oninput="editFixed(${i},'a',this.value)" aria-label="Cost per year"><span class="mu">per year</span><span id="fs${i}" class="wsub"></span></div></div>`).join(''):'<div class="text-xs mu p-2">No items yet — use + Add item</div>';
 }
 function editWear(i,k,v){vehicles[act].wear[i][k]=k==='n'?v:(parseFloat(v)||0);render()}
 function editFixed(i,k,v){vehicles[act].fixed[i][k]=k==='n'?v:(parseFloat(v)||0);render()}
@@ -1101,6 +1103,9 @@ function renderView(){
     $('fuelPriceLbl').textContent=`Fuel price (₹/${u})`; $('milLbl').textContent=`Mileage (km/${u})`;
     $('fuelKm').textContent='₹'+m.fuelKm.toFixed(2);
     $('svcKm').textContent='₹'+m.svcKm.toFixed(2)+' / km';
+    const wk=p.wear.reduce((a,w)=>a+w.c/(w.km||1),0), plural=n=>n+(n===1?' item':' items');
+    $('wearTot').textContent='₹'+wk.toFixed(2)+' / km'; $('fixTot').textContent=inr(m.opsYr)+' / yr';
+    $('wearCnt').textContent=plural(p.wear.length)+' · ₹'+wk.toFixed(2)+' / km'; $('fixCnt').textContent=plural(p.fixed.length)+' · '+inr(m.opsYr)+' / yr';
     p.wear.forEach((w,i)=>{const e=$('ws'+i); if(e)e.textContent='₹'+(w.c/(w.km||1)).toFixed(2)+'/km'});
     p.fixed.forEach((f,i)=>{const e=$('fs'+i); if(e)e.textContent='₹'+Math.round(f.a/12)+'/mo'});
     $('runLbl').textContent=m.run+' km/day'; $('runLblM').textContent=m.run+' km/day';
